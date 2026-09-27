@@ -1,0 +1,2781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Backend Curriculum Tracker</title>
+  
+  <!-- Python Snake SDE SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' fill='none'%3E%3Cpath d='M63.5 8C43.8 8 36.3 16.5 36.3 26.6v11.7h27.7v3.9H25.4C14.7 42.2 6 50.8 6 64.5c0 14.8 9.3 22.8 22.1 22.8h7.9V75.6c0-10.4 8.7-19.4 19.4-19.4h27.4c8.8 0 16-7.3 16-16.1V24.5C98.8 14.2 88.5 8 63.5 8zm-12.7 8.3a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4z' fill='%234F46E5'/%3E%3Cpath d='M64.5 120c19.7 0 27.2-8.5 27.2-18.6V89.7H64v-3.9h38.6c10.7 0 19.4-8.6 19.4-22.3 0-14.8-9.3-22.8-22.1-22.8h-7.9v11.7c0 10.4-8.7 19.4-19.4 19.4H45.2c-8.8 0-16 7.3-16 16.1v15.6c0 10.3 10.3 16.5 35.3 16.5zm12.7-8.3a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z' fill='%2310B981'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            page: '#F9FAFB',
+            surface: '#FFFFFF',
+            border: '#E5E7EB',
+            accent: '#4F46E5',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #F9FAFB; color: #111827; font-family: 'Inter', sans-serif; }
+    @keyframes badgePop {
+      0% { transform: scale(0.92); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .badge-pop {
+      animation: badgePop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* High-end clean white SaaS pattern for dedicated login page */
+    .login-bg-pattern {
+      background-color: #F8FAFC;
+      background-image: 
+        linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(99, 102, 241, 0.09), transparent 70%),
+        radial-gradient(ellipse 50% 35% at 90% 90%, rgba(16, 185, 129, 0.05), transparent 60%);
+      background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col justify-between">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- In-App Reset Confirmation Modal (No Chrome native confirm dialog) -->
+  <div id="reset-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[9998] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-200">
+    <div id="reset-modal-card" class="bg-white rounded-2xl max-w-md w-full border border-gray-200 shadow-2xl p-6 space-y-4 transform scale-95 transition-all duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-gray-950">Reset All Progress?</h3>
+          <p class="text-xs text-gray-500 leading-relaxed mt-1">
+            This will reset all your recorded skills and checkpoints back to <strong class="text-gray-700">Not learned</strong>. Your progress will be cleared.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
+        <button onclick="closeResetModal()" class="px-4 py-2 rounded-xl text-xs font-mono font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
+          Cancel
+        </button>
+        <button onclick="confirmResetAll()" class="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-rose-600 hover:bg-rose-700 text-white transition-colors shadow-sm">
+          Reset Everything
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Revisions Confirmation Modal -->
+  <div id="reset-revisions-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[9998] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-200">
+    <div id="reset-revisions-modal-card" class="bg-white rounded-2xl max-w-md w-full border border-gray-200 shadow-2xl p-6 space-y-4 transform scale-95 transition-all duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
+          <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-gray-950">Reset All Revisions?</h3>
+          <p class="text-xs text-gray-500 leading-relaxed mt-1">
+            This will uncheck the <strong class="text-gray-700">Revised</strong> tick box for all problems in Code 150. Problem completion statuses and your markdown notes will remain completely untouched.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
+        <button onclick="closeResetRevisionsModal()" class="px-4 py-2 rounded-xl text-xs font-mono font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button onclick="confirmResetRevisions()" class="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-sm cursor-pointer">
+          Reset Revisions
+        </button>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- ========================================================================= -->
+  <!-- Profile Page / Modal -->
+  <div id="profile-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[9998] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-200">
+    <div id="profile-modal-card" class="bg-white rounded-2xl max-w-md w-full border border-gray-200 shadow-2xl overflow-hidden transform scale-95 transition-all duration-200 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+        <div class="flex items-center gap-3">
+          <div id="modal-profile-avatar" class="w-11 h-11 rounded-xl bg-indigo-600 text-white font-bold text-base flex items-center justify-center shadow-sm shrink-0">
+            U
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="modal-profile-name" class="text-sm font-bold text-gray-900 leading-tight">User Profile</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                Account
+              </span>
+            </div>
+            <p id="modal-profile-username" class="text-xs font-mono text-gray-500 mt-0.5">@username</p>
+          </div>
+        </div>
+        <button onclick="closeProfileModal()" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-6 space-y-5 overflow-y-auto">
+
+        <!-- 1. Profile Details (Name & Permanent Username) -->
+        <div class="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5 text-indigo-600"></i> Profile Information
+            </h4>
+            <span class="text-[10px] font-mono text-gray-400">Account Details</span>
+          </div>
+
+          <!-- Name field -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Display Name</label>
+            <div class="flex gap-2">
+              <input id="profile-name-input" type="text" class="flex-1 px-3 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-medium" placeholder="Your Name" />
+              <button onclick="updateProfileName()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-mono font-bold transition-all shadow-2xs cursor-pointer">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <!-- Username field (Not changed - only one time process) -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-semibold text-gray-700">Username</label>
+              <span class="text-[10px] font-mono text-gray-500 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <i data-lucide="lock" class="w-2.5 h-2.5"></i> One-time process
+              </span>
+            </div>
+            <div class="relative">
+              <input id="profile-username-input" type="text" readonly disabled class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 bg-gray-100 text-gray-500 font-mono cursor-not-allowed select-none" />
+              <div class="absolute right-3 top-2.5 text-gray-400">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-1">Username is permanent and cannot be changed.</p>
+          </div>
+        </div>
+
+        <!-- 2. Security / Change Password (no forgot pass) -->
+        <div class="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+              <i data-lucide="key" class="w-3.5 h-3.5 text-indigo-600"></i> Change Password
+            </h4>
+            <span class="text-[10px] font-mono text-gray-400">Direct update</span>
+          </div>
+
+          <div class="space-y-2.5">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">New Password</label>
+              <input id="profile-new-password" type="password" placeholder="At least 6 characters" class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Confirm New Password</label>
+              <input id="profile-confirm-password" type="password" placeholder="Re-enter new password" class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono" />
+            </div>
+            <button onclick="updateUserPassword()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-mono font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i> Update Password
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Cloud Sync Status -->
+        <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3.5 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-gray-900">Cloud Sync Active</div>
+              <div class="text-[10px] font-mono text-gray-500" id="profile-sync-status">Autosyncs to Supabase</div>
+            </div>
+          </div>
+          <button onclick="syncTrackerToCloud(true)" class="px-2.5 py-1.5 bg-white hover:bg-gray-50 text-indigo-700 border border-indigo-200 rounded-lg text-[11px] font-mono font-bold transition-all shadow-2xs cursor-pointer">
+            Sync Now
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer (Log Out) -->
+      <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+        <span class="text-[11px] font-mono text-gray-400">Connected to Supabase</span>
+        <button onclick="handleLogOut()" class="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Log Out
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-3.5 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        
+        <!-- Python Snake SDE Logo -->
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-sm shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" class="w-6 h-6">
+            <path d="M63.5 8C43.8 8 36.3 16.5 36.3 26.6v11.7h27.7v3.9H25.4C14.7 42.2 6 50.8 6 64.5c0 14.8 9.3 22.8 22.1 22.8h7.9V75.6c0-10.4 8.7-19.4 19.4-19.4h27.4c8.8 0 16-7.3 16-16.1V24.5C98.8 14.2 88.5 8 63.5 8zm-12.7 8.3a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4z" fill="#4F46E5"/>
+            <path d="M64.5 120c19.7 0 27.2-8.5 27.2-18.6V89.7H64v-3.9h38.6c10.7 0 19.4-8.6 19.4-22.3 0-14.8-9.3-22.8-22.1-22.8h-7.9v11.7c0 10.4-8.7 19.4-19.4 19.4H45.2c-8.8 0-16 7.3-16 16.1v15.6c0 10.3 10.3 16.5 35.3 16.5zm12.7-8.3a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z" fill="#10B981"/>
+          </svg>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="header-top-badge" class="text-xs font-mono font-bold tracking-wider uppercase text-indigo-600">BACKEND SYLLABUS</span>
+          </div>
+          <h1 id="header-main-title" class="text-sm font-bold text-gray-900 tracking-tight">Python Backend Engineering Progress</h1>
+        </div>
+      </div>
+
+      <!-- Segmented Mode Switcher (Backend Roadmap vs Code 150 DSA) -->
+      <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+        <button id="btn-mode-curriculum" onclick="switchTrackerMode('curriculum')" class="px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all bg-white text-indigo-700 shadow-2xs flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
+          <span><span class="hidden sm:inline">Backend </span>Roadmap</span>
+        </button>
+        <button id="btn-mode-code150" onclick="switchTrackerMode('code150')" class="px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="code" class="w-3.5 h-3.5 shrink-0"></i>
+          <span>Code 150<span class="hidden sm:inline"> (DSA)</span></span>
+        </button>
+      </div>
+
+      <!-- Header Controls -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <button onclick="toggleAllCards(true)" class="p-2 sm:px-2.5 sm:py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-all shadow-xs cursor-pointer" title="Expand All">
+          <i data-lucide="chevrons-down" class="w-4 h-4"></i>
+        </button>
+        <button onclick="toggleAllCards(false)" class="p-2 sm:px-2.5 sm:py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-all shadow-xs cursor-pointer" title="Collapse All">
+          <i data-lucide="chevrons-up" class="w-4 h-4"></i>
+        </button>
+        <button id="btn-reset-revisions" onclick="openResetRevisionsModal()" class="hidden px-2.5 py-1.5 sm:px-3 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-mono font-bold flex items-center gap-1.5 border border-amber-200 transition-all shadow-xs cursor-pointer" title="Reset all problem revision marks">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i>
+          <span class="hidden sm:inline">Reset Revisions</span>
+        </button>
+        <button onclick="exportData()" class="px-2.5 py-1.5 sm:px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-mono font-bold flex items-center gap-1.5 border border-indigo-200 transition-all shadow-xs cursor-pointer" title="Export Progress (JSON)">
+          <i data-lucide="download" class="w-3.5 h-3.5 shrink-0"></i>
+          <span class="hidden sm:inline">Export</span>
+        </button>
+        <button onclick="openResetModal()" class="px-2.5 py-1.5 sm:px-3 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-mono font-bold flex items-center gap-1.5 border border-rose-200 transition-all shadow-xs cursor-pointer" title="Reset All Progress">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i>
+          <span class="hidden sm:inline">Reset</span>
+        </button>
+
+        <!-- Auth / Profile Header Action -->
+        <div id="auth-header-container" class="flex items-center pl-1 sm:border-l border-gray-200">
+          <a id="btn-open-auth" href="/login/" class="px-2.5 py-1.5 sm:px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer" title="Sign In">
+            <i data-lucide="user" class="w-3.5 h-3.5 shrink-0"></i>
+            <span class="hidden sm:inline">Sign In</span>
+          </a>
+          <button id="btn-open-profile" onclick="openProfileModal()" class="hidden px-2 py-1.5 sm:px-3 rounded-lg border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-950 text-xs font-mono font-semibold flex items-center gap-1.5 sm:gap-2 transition-all shadow-xs cursor-pointer" title="Account & Profile Settings">
+            <div id="header-avatar-circle" class="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">U</div>
+            <span id="header-username-display" class="hidden sm:inline">@username</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Body Content -->
+  <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 flex-1 w-full">
+
+    <!-- ================================================================ -->
+    <!-- CLEAN PROGRESS OVERVIEW (Light Theme, No Buzzwords)               -->
+    <!-- ================================================================ -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
+      <!-- Top Overview Row -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="overview-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-600"></i> CURRICULUM OVERVIEW
+            </span>
+            <span class="text-xs font-mono text-gray-500" id="total-topics-label">SKILLS &amp; CHECKPOINTS</span>
+          </div>
+          <h2 id="overview-title" class="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mt-1">Syllabus Progress &amp; Completion</h2>
+        </div>
+
+        <!-- Quick Status Counter Pills -->
+        <div class="flex items-center gap-2.5 flex-wrap" id="status-pills-row">
+          <div class="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2.5 shadow-2xs">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <div>
+              <div class="text-[10px] font-mono uppercase text-emerald-800 font-bold" id="pill-title-1">Mastered</div>
+              <div class="text-base font-bold font-mono text-emerald-700" id="vis-mastered-count">0 <span class="text-xs font-normal text-emerald-600" id="vis-mastered-pct">(0%)</span></div>
+            </div>
+          </div>
+
+          <div class="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2.5 shadow-2xs">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <div>
+              <div class="text-[10px] font-mono uppercase text-amber-800 font-bold" id="pill-title-2">Learning / Help</div>
+              <div class="text-base font-bold font-mono text-amber-700" id="vis-learning-count">0 <span class="text-xs font-normal text-amber-600" id="vis-learning-pct">(0%)</span></div>
+            </div>
+          </div>
+
+          <div class="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-2.5 shadow-2xs">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+            <div>
+              <div class="text-[10px] font-mono uppercase text-rose-800 font-bold" id="pill-title-3">Not Learned</div>
+              <div class="text-base font-bold font-mono text-rose-700" id="vis-notlearned-count">0 <span class="text-xs font-normal text-rose-600" id="vis-notlearned-pct">(100%)</span></div>
+            </div>
+          </div>
+
+          <!-- 4th Pill: Revised (Only shown in Code 150 mode) -->
+          <div id="pill-revised-box" class="hidden px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center gap-2.5 shadow-2xs">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-indigo-600"></i>
+            <div>
+              <div class="text-[10px] font-mono uppercase text-indigo-800 font-bold">Total Revised</div>
+              <div class="text-base font-bold font-mono text-indigo-700" id="vis-revised-count">0 <span class="text-xs font-normal text-indigo-600" id="vis-revised-pct">(0%)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segmented Stacked Progress Bar -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono">
+          <span class="text-gray-500 font-semibold">Total Progress</span>
+          <span class="font-bold text-indigo-600 text-sm" id="vis-overall-label">0% Complete (0 / 0 Skills)</span>
+        </div>
+        <div class="w-full h-3.5 bg-gray-100 rounded-full overflow-hidden flex p-0.5 gap-0.5 shadow-inner">
+          <div id="vis-bar-mastered" class="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style="width: 0%" title="Mastered"></div>
+          <div id="vis-bar-learning" class="bg-amber-400 h-full transition-all duration-500" style="width: 0%" title="Learning"></div>
+          <div id="vis-bar-notlearned" class="bg-rose-400 h-full rounded-r-full transition-all duration-500" style="width: 100%" title="Not Learned"></div>
+        </div>
+      </div>
+
+      <!-- Phases / Categories at a Glance -->
+      <div class="space-y-2 pt-2">
+        <div class="flex items-center justify-between">
+          <span id="radar-title-label" class="text-xs font-mono text-gray-500 uppercase font-bold flex items-center gap-1.5">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-indigo-600"></i> Phases at a Glance
+          </span>
+          <span class="text-[11px] font-mono text-gray-400">Click any card to jump</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="phases-visual-radar">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Filter & Search Controls (Clean Dots, No Emojis) -->
+    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+      <!-- Search -->
+      <div class="relative w-full md:w-80">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <input type="text" id="filter-search" oninput="onSearchChange(this.value)" placeholder="Search topics, checkpoints (e.g. JWT, Mypy, yield)..."
+          class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-xs font-sans focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-gray-50/50" />
+      </div>
+
+      <!-- Filter Buttons -->
+      <div class="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
+        <span class="text-xs font-mono text-gray-400 mr-1 hidden sm:inline">Filter:</span>
+        <button onclick="setFilter('ALL')" id="tab-ALL" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-indigo-600 text-white shadow-xs">
+          All
+        </button>
+        <button onclick="setFilter('NOT_LEARNED')" id="tab-NOT_LEARNED" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+          <span id="label-filter-nl">Not learned</span>
+        </button>
+        <button onclick="setFilter('LEARNING')" id="tab-LEARNING" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span id="label-filter-l">Learning</span>
+        </button>
+        <button onclick="setFilter('MASTERED')" id="tab-MASTERED" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="label-filter-m">Mastered</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- PHASES CONTAINER (Backend Roadmap)                               -->
+    <!-- ================================================================ -->
+    <div id="phases-container" class="space-y-8">
+      <!-- Dynamic Tables Injected by JS -->
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 border-t border-gray-200 bg-white py-6 px-6 text-center text-xs font-mono text-gray-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+        <span class="font-bold text-gray-800">Python Backend Engineering Roadmap</span>
+        <span class="hidden sm:inline">• LocalStorage Sync Active</span>
+      </div>
+      <div class="hidden sm:block">Rule: Output-forced practice over passive reading.</div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: LOGIC FIXES & DATA STORE                                      -->
+  <!-- ========================================================================= -->
+  <script>
+    // 192 LeetCode Problems across 11 Patterns (Self-contained)
+    const CODE150_CATEGORIES = [{"id": "two_pointers_patterns_1_4_6_7", "title": "Two Pointers \u2014 Patterns 1, 4, 6, 7", "problems": [{"num": 1, "name": "Two Sum", "id": "lc_1", "slug": "two-sum", "url": "https://leetcode.com/problems/two-sum/"}, {"num": 11, "name": "Container With Most Water", "id": "lc_11", "slug": "container-with-most-water", "url": "https://leetcode.com/problems/container-with-most-water/"}, {"num": 15, "name": "3Sum", "id": "lc_15", "slug": "3sum", "url": "https://leetcode.com/problems/3sum/"}, {"num": 16, "name": "3Sum Closest", "id": "lc_16", "slug": "3sum-closest", "url": "https://leetcode.com/problems/3sum-closest/"}, {"num": 18, "name": "4Sum", "id": "lc_18", "slug": "4sum", "url": "https://leetcode.com/problems/4sum/"}, {"num": 167, "name": "Two Sum II - Input Array Is Sorted", "id": "lc_167", "slug": "two-sum-ii-input-array-is-sorted", "url": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/"}, {"num": 349, "name": "Intersection of Two Arrays", "id": "lc_349", "slug": "intersection-of-two-arrays", "url": "https://leetcode.com/problems/intersection-of-two-arrays/"}, {"num": 392, "name": "Is Subsequence", "id": "lc_392", "slug": "is-subsequence", "url": "https://leetcode.com/problems/is-subsequence/"}, {"num": 881, "name": "Boats to Save People", "id": "lc_881", "slug": "boats-to-save-people", "url": "https://leetcode.com/problems/boats-to-save-people/"}, {"num": 977, "name": "Squares of a Sorted Array", "id": "lc_977", "slug": "squares-of-a-sorted-array", "url": "https://leetcode.com/problems/squares-of-a-sorted-array/"}, {"num": 259, "name": "3Sum Smaller", "id": "lc_259", "slug": "3sum-smaller", "url": "https://leetcode.com/problems/3sum-smaller/"}, {"num": 26, "name": "Remove Duplicates from Sorted Array", "id": "lc_26", "slug": "remove-duplicates-from-sorted-array", "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array/"}, {"num": 27, "name": "Remove Element", "id": "lc_27", "slug": "remove-element", "url": "https://leetcode.com/problems/remove-element/"}, {"num": 75, "name": "Sort Colors", "id": "lc_75", "slug": "sort-colors", "url": "https://leetcode.com/problems/sort-colors/"}, {"num": 80, "name": "Remove Duplicates from Sorted Array II", "id": "lc_80", "slug": "remove-duplicates-from-sorted-array-ii", "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/"}, {"num": 283, "name": "Move Zeroes", "id": "lc_283", "slug": "move-zeroes", "url": "https://leetcode.com/problems/move-zeroes/"}, {"num": 443, "name": "String Compression", "id": "lc_443", "slug": "string-compression", "url": "https://leetcode.com/problems/string-compression/"}, {"num": 905, "name": "Sort Array By Parity", "id": "lc_905", "slug": "sort-array-by-parity", "url": "https://leetcode.com/problems/sort-array-by-parity/"}, {"num": 2337, "name": "Move Pieces to Obtain a String", "id": "lc_2337", "slug": "move-pieces-to-obtain-a-string", "url": "https://leetcode.com/problems/move-pieces-to-obtain-a-string/"}, {"num": 2938, "name": "Separate Black and White Balls", "id": "lc_2938", "slug": "separate-black-and-white-balls", "url": "https://leetcode.com/problems/separate-black-and-white-balls/"}, {"num": 5, "name": "Longest Palindromic Substring", "id": "lc_5", "slug": "longest-palindromic-substring", "url": "https://leetcode.com/problems/longest-palindromic-substring/"}, {"num": 647, "name": "Palindromic Substrings", "id": "lc_647", "slug": "palindromic-substrings", "url": "https://leetcode.com/problems/palindromic-substrings/"}, {"num": 151, "name": "Reverse Words in a String", "id": "lc_151", "slug": "reverse-words-in-a-string", "url": "https://leetcode.com/problems/reverse-words-in-a-string/"}, {"num": 344, "name": "Reverse String", "id": "lc_344", "slug": "reverse-string", "url": "https://leetcode.com/problems/reverse-string/"}, {"num": 345, "name": "Reverse Vowels of a String", "id": "lc_345", "slug": "reverse-vowels-of-a-string", "url": "https://leetcode.com/problems/reverse-vowels-of-a-string/"}, {"num": 541, "name": "Reverse String II", "id": "lc_541", "slug": "reverse-string-ii", "url": "https://leetcode.com/problems/reverse-string-ii/"}]}, {"id": "sliding_window_pattern_9", "title": "Sliding Window \u2014 Pattern 9", "problems": [{"num": 3, "name": "Longest Substring Without Repeating Characters", "id": "lc_3", "slug": "longest-substring-without-repeating-characters", "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/"}, {"num": 76, "name": "Minimum Window Substring", "id": "lc_76", "slug": "minimum-window-substring", "url": "https://leetcode.com/problems/minimum-window-substring/"}, {"num": 209, "name": "Minimum Size Subarray Sum", "id": "lc_209", "slug": "minimum-size-subarray-sum", "url": "https://leetcode.com/problems/minimum-size-subarray-sum/"}, {"num": 219, "name": "Contains Duplicate II", "id": "lc_219", "slug": "contains-duplicate-ii", "url": "https://leetcode.com/problems/contains-duplicate-ii/"}, {"num": 424, "name": "Longest Repeating Character Replacement", "id": "lc_424", "slug": "longest-repeating-character-replacement", "url": "https://leetcode.com/problems/longest-repeating-character-replacement/"}, {"num": 713, "name": "Subarray Product Less Than K", "id": "lc_713", "slug": "subarray-product-less-than-k", "url": "https://leetcode.com/problems/subarray-product-less-than-k/"}, {"num": 904, "name": "Fruit Into Baskets", "id": "lc_904", "slug": "fruit-into-baskets", "url": "https://leetcode.com/problems/fruit-into-baskets/"}, {"num": 1004, "name": "Max Consecutive Ones III", "id": "lc_1004", "slug": "max-consecutive-ones-iii", "url": "https://leetcode.com/problems/max-consecutive-ones-iii/"}, {"num": 1438, "name": "Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit", "id": "lc_1438", "slug": "longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit", "url": "https://leetcode.com/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/"}, {"num": 1493, "name": "Longest Subarray of 1's After Deleting One Element", "id": "lc_1493", "slug": "longest-subarray-of-1-s-after-deleting-one-element", "url": "https://leetcode.com/problems/longest-subarray-of-1-s-after-deleting-one-element/"}, {"num": 1658, "name": "Minimum Operations to Reduce X to Zero", "id": "lc_1658", "slug": "minimum-operations-to-reduce-x-to-zero", "url": "https://leetcode.com/problems/minimum-operations-to-reduce-x-to-zero/"}, {"num": 1838, "name": "Frequency of the Most Frequent Element", "id": "lc_1838", "slug": "frequency-of-the-most-frequent-element", "url": "https://leetcode.com/problems/frequency-of-the-most-frequent-element/"}, {"num": 2461, "name": "Maximum Sum of Distinct Subarrays With Length K", "id": "lc_2461", "slug": "maximum-sum-of-distinct-subarrays-with-length-k", "url": "https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/"}, {"num": 2516, "name": "Take K of Each Character From Left and Right", "id": "lc_2516", "slug": "take-k-of-each-character-from-left-and-right", "url": "https://leetcode.com/problems/take-k-of-each-character-from-left-and-right/"}, {"num": 2762, "name": "Continuous Subarrays", "id": "lc_2762", "slug": "continuous-subarrays", "url": "https://leetcode.com/problems/continuous-subarrays/"}, {"num": 2779, "name": "Maximum Beauty of an Array After Applying Operation", "id": "lc_2779", "slug": "maximum-beauty-of-an-array-after-applying-operation", "url": "https://leetcode.com/problems/maximum-beauty-of-an-array-after-applying-operation/"}, {"num": 2981, "name": "Find Longest Special Substring That Occurs Thrice I", "id": "lc_2981", "slug": "find-longest-special-substring-that-occurs-thrice-i", "url": "https://leetcode.com/problems/find-longest-special-substring-that-occurs-thrice-i/"}, {"num": 3026, "name": "Maximum Good Subarray Sum", "id": "lc_3026", "slug": "maximum-good-subarray-sum", "url": "https://leetcode.com/problems/maximum-good-subarray-sum/"}, {"num": 3346, "name": "Maximum Frequency of an Element After Performing Operations I", "id": "lc_3346", "slug": "maximum-frequency-of-an-element-after-performing-operations-i", "url": "https://leetcode.com/problems/maximum-frequency-of-an-element-after-performing-operations-i/"}, {"num": 3347, "name": "Maximum Frequency of an Element After Performing Operations II", "id": "lc_3347", "slug": "maximum-frequency-of-an-element-after-performing-operations-ii", "url": "https://leetcode.com/problems/maximum-frequency-of-an-element-after-performing-operations-ii/"}]}, {"id": "trees_patterns_12_13_14_15", "title": "Trees \u2014 Patterns 12, 13, 14, 15", "problems": [{"num": 102, "name": "Binary Tree Level Order Traversal", "id": "lc_102", "slug": "binary-tree-level-order-traversal", "url": "https://leetcode.com/problems/binary-tree-level-order-traversal/"}, {"num": 103, "name": "Binary Tree Zigzag Level Order Traversal", "id": "lc_103", "slug": "binary-tree-zigzag-level-order-traversal", "url": "https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/"}, {"num": 199, "name": "Binary Tree Right Side View", "id": "lc_199", "slug": "binary-tree-right-side-view", "url": "https://leetcode.com/problems/binary-tree-right-side-view/"}, {"num": 515, "name": "Find Largest Value in Each Tree Row", "id": "lc_515", "slug": "find-largest-value-in-each-tree-row", "url": "https://leetcode.com/problems/find-largest-value-in-each-tree-row/"}, {"num": 1161, "name": "Maximum Level Sum of a Binary Tree", "id": "lc_1161", "slug": "maximum-level-sum-of-a-binary-tree", "url": "https://leetcode.com/problems/maximum-level-sum-of-a-binary-tree/"}, {"num": 100, "name": "Same Tree", "id": "lc_100", "slug": "same-tree", "url": "https://leetcode.com/problems/same-tree/"}, {"num": 101, "name": "Symmetric Tree", "id": "lc_101", "slug": "symmetric-tree", "url": "https://leetcode.com/problems/symmetric-tree/"}, {"num": 105, "name": "Construct Binary Tree from Preorder and Inorder Traversal", "id": "lc_105", "slug": "construct-binary-tree-from-preorder-and-inorder-traversal", "url": "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/"}, {"num": 114, "name": "Flatten Binary Tree to Linked List", "id": "lc_114", "slug": "flatten-binary-tree-to-linked-list", "url": "https://leetcode.com/problems/flatten-binary-tree-to-linked-list/"}, {"num": 226, "name": "Invert Binary Tree", "id": "lc_226", "slug": "invert-binary-tree", "url": "https://leetcode.com/problems/invert-binary-tree/"}, {"num": 257, "name": "Binary Tree Paths", "id": "lc_257", "slug": "binary-tree-paths", "url": "https://leetcode.com/problems/binary-tree-paths/"}, {"num": 988, "name": "Smallest String Starting From Leaf", "id": "lc_988", "slug": "smallest-string-starting-from-leaf", "url": "https://leetcode.com/problems/smallest-string-starting-from-leaf/"}, {"num": 94, "name": "Binary Tree Inorder Traversal", "id": "lc_94", "slug": "binary-tree-inorder-traversal", "url": "https://leetcode.com/problems/binary-tree-inorder-traversal/"}, {"num": 98, "name": "Validate Binary Search Tree", "id": "lc_98", "slug": "validate-binary-search-tree", "url": "https://leetcode.com/problems/validate-binary-search-tree/"}, {"num": 173, "name": "Binary Search Tree Iterator", "id": "lc_173", "slug": "binary-search-tree-iterator", "url": "https://leetcode.com/problems/binary-search-tree-iterator/"}, {"num": 230, "name": "Kth Smallest Element in a BST", "id": "lc_230", "slug": "kth-smallest-element-in-a-bst", "url": "https://leetcode.com/problems/kth-smallest-element-in-a-bst/"}, {"num": 501, "name": "Find Mode in Binary Search Tree", "id": "lc_501", "slug": "find-mode-in-binary-search-tree", "url": "https://leetcode.com/problems/find-mode-in-binary-search-tree/"}, {"num": 530, "name": "Minimum Absolute Difference in BST", "id": "lc_530", "slug": "minimum-absolute-difference-in-bst", "url": "https://leetcode.com/problems/minimum-absolute-difference-in-bst/"}, {"num": 104, "name": "Maximum Depth of Binary Tree", "id": "lc_104", "slug": "maximum-depth-of-binary-tree", "url": "https://leetcode.com/problems/maximum-depth-of-binary-tree/"}, {"num": 110, "name": "Balanced Binary Tree", "id": "lc_110", "slug": "balanced-binary-tree", "url": "https://leetcode.com/problems/balanced-binary-tree/"}, {"num": 124, "name": "Binary Tree Maximum Path Sum", "id": "lc_124", "slug": "binary-tree-maximum-path-sum", "url": "https://leetcode.com/problems/binary-tree-maximum-path-sum/"}, {"num": 145, "name": "Binary Tree Postorder Traversal", "id": "lc_145", "slug": "binary-tree-postorder-traversal", "url": "https://leetcode.com/problems/binary-tree-postorder-traversal/"}, {"num": 337, "name": "House Robber III", "id": "lc_337", "slug": "house-robber-iii", "url": "https://leetcode.com/problems/house-robber-iii/"}, {"num": 366, "name": "Find Leaves of Binary Tree", "id": "lc_366", "slug": "find-leaves-of-binary-tree", "url": "https://leetcode.com/problems/find-leaves-of-binary-tree/"}, {"num": 543, "name": "Diameter of Binary Tree", "id": "lc_543", "slug": "diameter-of-binary-tree", "url": "https://leetcode.com/problems/diameter-of-binary-tree/"}, {"num": 863, "name": "All Nodes Distance K in Binary Tree", "id": "lc_863", "slug": "all-nodes-distance-k-in-binary-tree", "url": "https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/"}, {"num": 1110, "name": "Delete Nodes And Return Forest", "id": "lc_1110", "slug": "delete-nodes-and-return-forest", "url": "https://leetcode.com/problems/delete-nodes-and-return-forest/"}, {"num": 2458, "name": "Height of Binary Tree After Subtree Removal Queries", "id": "lc_2458", "slug": "height-of-binary-tree-after-subtree-removal-queries", "url": "https://leetcode.com/problems/height-of-binary-tree-after-subtree-removal-queries/"}]}, {"id": "graphs_patterns_19_20", "title": "Graphs \u2014 Patterns 19, 20", "problems": [{"num": 130, "name": "Surrounded Regions", "id": "lc_130", "slug": "surrounded-regions", "url": "https://leetcode.com/problems/surrounded-regions/"}, {"num": 200, "name": "Number of Islands", "id": "lc_200", "slug": "number-of-islands", "url": "https://leetcode.com/problems/number-of-islands/"}, {"num": 417, "name": "Pacific Atlantic Water Flow", "id": "lc_417", "slug": "pacific-atlantic-water-flow", "url": "https://leetcode.com/problems/pacific-atlantic-water-flow/"}, {"num": 547, "name": "Number of Provinces", "id": "lc_547", "slug": "number-of-provinces", "url": "https://leetcode.com/problems/number-of-provinces/"}, {"num": 695, "name": "Max Area of Island", "id": "lc_695", "slug": "max-area-of-island", "url": "https://leetcode.com/problems/max-area-of-island/"}, {"num": 733, "name": "Flood Fill", "id": "lc_733", "slug": "flood-fill", "url": "https://leetcode.com/problems/flood-fill/"}, {"num": 841, "name": "Keys and Rooms", "id": "lc_841", "slug": "keys-and-rooms", "url": "https://leetcode.com/problems/keys-and-rooms/"}, {"num": 1020, "name": "Number of Enclaves", "id": "lc_1020", "slug": "number-of-enclaves", "url": "https://leetcode.com/problems/number-of-enclaves/"}, {"num": 1254, "name": "Number of Closed Islands", "id": "lc_1254", "slug": "number-of-closed-islands", "url": "https://leetcode.com/problems/number-of-closed-islands/"}, {"num": 1905, "name": "Count Sub Islands", "id": "lc_1905", "slug": "count-sub-islands", "url": "https://leetcode.com/problems/count-sub-islands/"}, {"num": 2101, "name": "Detonate the Maximum Bombs", "id": "lc_2101", "slug": "detonate-the-maximum-bombs", "url": "https://leetcode.com/problems/detonate-the-maximum-bombs/"}, {"num": 127, "name": "Word Ladder", "id": "lc_127", "slug": "word-ladder", "url": "https://leetcode.com/problems/word-ladder/"}, {"num": 542, "name": "01 Matrix", "id": "lc_542", "slug": "01-matrix", "url": "https://leetcode.com/problems/01-matrix/"}, {"num": 994, "name": "Rotting Oranges", "id": "lc_994", "slug": "rotting-oranges", "url": "https://leetcode.com/problems/rotting-oranges/"}, {"num": 1091, "name": "Shortest Path in Binary Matrix", "id": "lc_1091", "slug": "shortest-path-in-binary-matrix", "url": "https://leetcode.com/problems/shortest-path-in-binary-matrix/"}]}, {"id": "dp_patterns_27_28_29_34", "title": "DP \u2014 Patterns 27, 28, 29, 34", "problems": [{"num": 70, "name": "Climbing Stairs", "id": "lc_70", "slug": "climbing-stairs", "url": "https://leetcode.com/problems/climbing-stairs/"}, {"num": 91, "name": "Decode Ways", "id": "lc_91", "slug": "decode-ways", "url": "https://leetcode.com/problems/decode-ways/"}, {"num": 198, "name": "House Robber", "id": "lc_198", "slug": "house-robber", "url": "https://leetcode.com/problems/house-robber/"}, {"num": 213, "name": "House Robber II", "id": "lc_213", "slug": "house-robber-ii", "url": "https://leetcode.com/problems/house-robber-ii/"}, {"num": 337, "name": "House Robber III", "id": "lc_337_dp_p", "slug": "house-robber-iii", "url": "https://leetcode.com/problems/house-robber-iii/"}, {"num": 509, "name": "Fibonacci Number", "id": "lc_509", "slug": "fibonacci-number", "url": "https://leetcode.com/problems/fibonacci-number/"}, {"num": 740, "name": "Delete and Earn", "id": "lc_740", "slug": "delete-and-earn", "url": "https://leetcode.com/problems/delete-and-earn/"}, {"num": 746, "name": "Min Cost Climbing Stairs", "id": "lc_746", "slug": "min-cost-climbing-stairs", "url": "https://leetcode.com/problems/min-cost-climbing-stairs/"}, {"num": 53, "name": "Maximum Subarray", "id": "lc_53", "slug": "maximum-subarray", "url": "https://leetcode.com/problems/maximum-subarray/"}, {"num": 322, "name": "Coin Change", "id": "lc_322", "slug": "coin-change", "url": "https://leetcode.com/problems/coin-change/"}, {"num": 377, "name": "Combination Sum IV", "id": "lc_377", "slug": "combination-sum-iv", "url": "https://leetcode.com/problems/combination-sum-iv/"}, {"num": 518, "name": "Coin Change II", "id": "lc_518", "slug": "coin-change-ii", "url": "https://leetcode.com/problems/coin-change-ii/"}, {"num": 62, "name": "Unique Paths", "id": "lc_62", "slug": "unique-paths", "url": "https://leetcode.com/problems/unique-paths/"}, {"num": 63, "name": "Unique Paths II", "id": "lc_63", "slug": "unique-paths-ii", "url": "https://leetcode.com/problems/unique-paths-ii/"}, {"num": 64, "name": "Minimum Path Sum", "id": "lc_64", "slug": "minimum-path-sum", "url": "https://leetcode.com/problems/minimum-path-sum/"}, {"num": 120, "name": "Triangle", "id": "lc_120", "slug": "triangle", "url": "https://leetcode.com/problems/triangle/"}, {"num": 221, "name": "Maximal Square", "id": "lc_221", "slug": "maximal-square", "url": "https://leetcode.com/problems/maximal-square/"}, {"num": 931, "name": "Minimum Falling Path Sum", "id": "lc_931", "slug": "minimum-falling-path-sum", "url": "https://leetcode.com/problems/minimum-falling-path-sum/"}, {"num": 1277, "name": "Count Square Submatrices with All Ones", "id": "lc_1277", "slug": "count-square-submatrices-with-all-ones", "url": "https://leetcode.com/problems/count-square-submatrices-with-all-ones/"}]}, {"id": "binary_search_patterns_55_56_58", "title": "Binary Search \u2014 Patterns 55, 56, 58", "problems": [{"num": 35, "name": "Search Insert Position", "id": "lc_35", "slug": "search-insert-position", "url": "https://leetcode.com/problems/search-insert-position/"}, {"num": 69, "name": "Sqrt(x)", "id": "lc_69", "slug": "sqrt-x", "url": "https://leetcode.com/problems/sqrt-x/"}, {"num": 74, "name": "Search a 2D Matrix", "id": "lc_74", "slug": "search-a-2d-matrix", "url": "https://leetcode.com/problems/search-a-2d-matrix/"}, {"num": 278, "name": "First Bad Version", "id": "lc_278", "slug": "first-bad-version", "url": "https://leetcode.com/problems/first-bad-version/"}, {"num": 374, "name": "Guess Number Higher or Lower", "id": "lc_374", "slug": "guess-number-higher-or-lower", "url": "https://leetcode.com/problems/guess-number-higher-or-lower/"}, {"num": 540, "name": "Single Element in a Sorted Array", "id": "lc_540", "slug": "single-element-in-a-sorted-array", "url": "https://leetcode.com/problems/single-element-in-a-sorted-array/"}, {"num": 704, "name": "Binary Search", "id": "lc_704", "slug": "binary-search", "url": "https://leetcode.com/problems/binary-search/"}, {"num": 1539, "name": "Kth Missing Positive Number", "id": "lc_1539", "slug": "kth-missing-positive-number", "url": "https://leetcode.com/problems/kth-missing-positive-number/"}, {"num": 33, "name": "Search in Rotated Sorted Array", "id": "lc_33", "slug": "search-in-rotated-sorted-array", "url": "https://leetcode.com/problems/search-in-rotated-sorted-array/"}, {"num": 81, "name": "Search in Rotated Sorted Array II", "id": "lc_81", "slug": "search-in-rotated-sorted-array-ii", "url": "https://leetcode.com/problems/search-in-rotated-sorted-array-ii/"}, {"num": 153, "name": "Find Minimum in Rotated Sorted Array", "id": "lc_153", "slug": "find-minimum-in-rotated-sorted-array", "url": "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/"}, {"num": 162, "name": "Find Peak Element", "id": "lc_162", "slug": "find-peak-element", "url": "https://leetcode.com/problems/find-peak-element/"}, {"num": 852, "name": "Peak Index in a Mountain Array", "id": "lc_852", "slug": "peak-index-in-a-mountain-array", "url": "https://leetcode.com/problems/peak-index-in-a-mountain-array/"}, {"num": 1095, "name": "Find in Mountain Array", "id": "lc_1095", "slug": "find-in-mountain-array", "url": "https://leetcode.com/problems/find-in-mountain-array/"}, {"num": 34, "name": "Find First and Last Position of Element in Sorted Array", "id": "lc_34", "slug": "find-first-and-last-position-of-element-in-sorted-array", "url": "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/"}, {"num": 658, "name": "Find K Closest Elements", "id": "lc_658", "slug": "find-k-closest-elements", "url": "https://leetcode.com/problems/find-k-closest-elements/"}]}, {"id": "stack_patterns_60_61_64", "title": "Stack \u2014 Patterns 60, 61, 64", "problems": [{"num": 20, "name": "Valid Parentheses", "id": "lc_20", "slug": "valid-parentheses", "url": "https://leetcode.com/problems/valid-parentheses/"}, {"num": 32, "name": "Longest Valid Parentheses", "id": "lc_32", "slug": "longest-valid-parentheses", "url": "https://leetcode.com/problems/longest-valid-parentheses/"}, {"num": 921, "name": "Minimum Add to Make Parentheses Valid", "id": "lc_921", "slug": "minimum-add-to-make-parentheses-valid", "url": "https://leetcode.com/problems/minimum-add-to-make-parentheses-valid/"}, {"num": 1249, "name": "Minimum Remove to Make Valid Parentheses", "id": "lc_1249", "slug": "minimum-remove-to-make-valid-parentheses", "url": "https://leetcode.com/problems/minimum-remove-to-make-valid-parentheses/"}, {"num": 1963, "name": "Minimum Number of Swaps to Make the String Balanced", "id": "lc_1963", "slug": "minimum-number-of-swaps-to-make-the-string-balanced", "url": "https://leetcode.com/problems/minimum-number-of-swaps-to-make-the-string-balanced/"}, {"num": 402, "name": "Remove K Digits", "id": "lc_402", "slug": "remove-k-digits", "url": "https://leetcode.com/problems/remove-k-digits/"}, {"num": 496, "name": "Next Greater Element I", "id": "lc_496", "slug": "next-greater-element-i", "url": "https://leetcode.com/problems/next-greater-element-i/"}, {"num": 503, "name": "Next Greater Element II", "id": "lc_503", "slug": "next-greater-element-ii", "url": "https://leetcode.com/problems/next-greater-element-ii/"}, {"num": 739, "name": "Daily Temperatures", "id": "lc_739", "slug": "daily-temperatures", "url": "https://leetcode.com/problems/daily-temperatures/"}, {"num": 901, "name": "Online Stock Span", "id": "lc_901", "slug": "online-stock-span", "url": "https://leetcode.com/problems/online-stock-span/"}, {"num": 907, "name": "Sum of Subarray Minimums", "id": "lc_907", "slug": "sum-of-subarray-minimums", "url": "https://leetcode.com/problems/sum-of-subarray-minimums/"}, {"num": 962, "name": "Maximum Width Ramp", "id": "lc_962", "slug": "maximum-width-ramp", "url": "https://leetcode.com/problems/maximum-width-ramp/"}, {"num": 1475, "name": "Final Prices With a Special Discount in a Shop", "id": "lc_1475", "slug": "final-prices-with-a-special-discount-in-a-shop", "url": "https://leetcode.com/problems/final-prices-with-a-special-discount-in-a-shop/"}, {"num": 1673, "name": "Find the Most Competitive Subsequence", "id": "lc_1673", "slug": "find-the-most-competitive-subsequence", "url": "https://leetcode.com/problems/find-the-most-competitive-subsequence/"}, {"num": 155, "name": "Min Stack", "id": "lc_155", "slug": "min-stack", "url": "https://leetcode.com/problems/min-stack/"}]}, {"id": "linked_list_patterns_71_72_75", "title": "Linked List \u2014 Patterns 71, 72, 75", "problems": [{"num": 83, "name": "Remove Duplicates from Sorted List", "id": "lc_83", "slug": "remove-duplicates-from-sorted-list", "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-list/"}, {"num": 92, "name": "Reverse Linked List II", "id": "lc_92", "slug": "reverse-linked-list-ii", "url": "https://leetcode.com/problems/reverse-linked-list-ii/"}, {"num": 206, "name": "Reverse Linked List", "id": "lc_206", "slug": "reverse-linked-list", "url": "https://leetcode.com/problems/reverse-linked-list/"}, {"num": 25, "name": "Reverse Nodes in k-Group", "id": "lc_25", "slug": "reverse-nodes-in-k-group", "url": "https://leetcode.com/problems/reverse-nodes-in-k-group/"}, {"num": 234, "name": "Palindrome Linked List", "id": "lc_234", "slug": "palindrome-linked-list", "url": "https://leetcode.com/problems/palindrome-linked-list/"}, {"num": 82, "name": "Remove Duplicates from Sorted List II", "id": "lc_82", "slug": "remove-duplicates-from-sorted-list-ii", "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/"}, {"num": 21, "name": "Merge Two Sorted Lists", "id": "lc_21", "slug": "merge-two-sorted-lists", "url": "https://leetcode.com/problems/merge-two-sorted-lists/"}, {"num": 24, "name": "Swap Nodes in Pairs", "id": "lc_24", "slug": "swap-nodes-in-pairs", "url": "https://leetcode.com/problems/swap-nodes-in-pairs/"}, {"num": 61, "name": "Rotate List", "id": "lc_61", "slug": "rotate-list", "url": "https://leetcode.com/problems/rotate-list/"}, {"num": 86, "name": "Partition List", "id": "lc_86", "slug": "partition-list", "url": "https://leetcode.com/problems/partition-list/"}, {"num": 143, "name": "Reorder List", "id": "lc_143", "slug": "reorder-list", "url": "https://leetcode.com/problems/reorder-list/"}, {"num": 328, "name": "Odd Even Linked List", "id": "lc_328", "slug": "odd-even-linked-list", "url": "https://leetcode.com/problems/odd-even-linked-list/"}]}, {"id": "array_string_basics_patterns_76_90", "title": "Array/String basics \u2014 Patterns 76-90", "problems": [{"num": 48, "name": "Rotate Image", "id": "lc_48", "slug": "rotate-image", "url": "https://leetcode.com/problems/rotate-image/"}, {"num": 189, "name": "Rotate Array", "id": "lc_189", "slug": "rotate-array", "url": "https://leetcode.com/problems/rotate-array/"}, {"num": 54, "name": "Spiral Matrix", "id": "lc_54", "slug": "spiral-matrix", "url": "https://leetcode.com/problems/spiral-matrix/"}, {"num": 885, "name": "Spiral Matrix III", "id": "lc_885", "slug": "spiral-matrix-iii", "url": "https://leetcode.com/problems/spiral-matrix-iii/"}, {"num": 2326, "name": "Spiral Matrix IV", "id": "lc_2326", "slug": "spiral-matrix-iv", "url": "https://leetcode.com/problems/spiral-matrix-iv/"}, {"num": 73, "name": "Set Matrix Zeroes", "id": "lc_73", "slug": "set-matrix-zeroes", "url": "https://leetcode.com/problems/set-matrix-zeroes/"}, {"num": 238, "name": "Product of Array Except Self", "id": "lc_238", "slug": "product-of-array-except-self", "url": "https://leetcode.com/problems/product-of-array-except-self/"}, {"num": 66, "name": "Plus One", "id": "lc_66", "slug": "plus-one", "url": "https://leetcode.com/problems/plus-one/"}, {"num": 88, "name": "Merge Sorted Array", "id": "lc_88", "slug": "merge-sorted-array", "url": "https://leetcode.com/problems/merge-sorted-array/"}, {"num": 41, "name": "First Missing Positive", "id": "lc_41", "slug": "first-missing-positive", "url": "https://leetcode.com/problems/first-missing-positive/"}, {"num": 268, "name": "Missing Number", "id": "lc_268", "slug": "missing-number", "url": "https://leetcode.com/problems/missing-number/"}, {"num": 287, "name": "Find the Duplicate Number", "id": "lc_287", "slug": "find-the-duplicate-number", "url": "https://leetcode.com/problems/find-the-duplicate-number/"}, {"num": 442, "name": "Find All Duplicates in an Array", "id": "lc_442", "slug": "find-all-duplicates-in-an-array", "url": "https://leetcode.com/problems/find-all-duplicates-in-an-array/"}, {"num": 448, "name": "Find All Numbers Disappeared in an Array", "id": "lc_448", "slug": "find-all-numbers-disappeared-in-an-array", "url": "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/"}, {"num": 152, "name": "Maximum Product Subarray", "id": "lc_152", "slug": "maximum-product-subarray", "url": "https://leetcode.com/problems/maximum-product-subarray/"}, {"num": 9, "name": "Palindrome Number", "id": "lc_9", "slug": "palindrome-number", "url": "https://leetcode.com/problems/palindrome-number/"}, {"num": 125, "name": "Valid Palindrome", "id": "lc_125", "slug": "valid-palindrome", "url": "https://leetcode.com/problems/valid-palindrome/"}, {"num": 680, "name": "Valid Palindrome II", "id": "lc_680", "slug": "valid-palindrome-ii", "url": "https://leetcode.com/problems/valid-palindrome-ii/"}, {"num": 49, "name": "Group Anagrams", "id": "lc_49", "slug": "group-anagrams", "url": "https://leetcode.com/problems/group-anagrams/"}, {"num": 242, "name": "Valid Anagram", "id": "lc_242", "slug": "valid-anagram", "url": "https://leetcode.com/problems/valid-anagram/"}, {"num": 13, "name": "Roman to Integer", "id": "lc_13", "slug": "roman-to-integer", "url": "https://leetcode.com/problems/roman-to-integer/"}, {"num": 8, "name": "String to Integer (atoi)", "id": "lc_8", "slug": "string-to-integer-atoi", "url": "https://leetcode.com/problems/string-to-integer-atoi/"}, {"num": 43, "name": "Multiply Strings", "id": "lc_43", "slug": "multiply-strings", "url": "https://leetcode.com/problems/multiply-strings/"}, {"num": 28, "name": "Find the Index of the First Occurrence in a String", "id": "lc_28", "slug": "find-the-index-of-the-first-occurrence-in-a-string", "url": "https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/"}, {"num": 214, "name": "Shortest Palindrome", "id": "lc_214", "slug": "shortest-palindrome", "url": "https://leetcode.com/problems/shortest-palindrome/"}, {"num": 686, "name": "Repeated String Match", "id": "lc_686", "slug": "repeated-string-match", "url": "https://leetcode.com/problems/repeated-string-match/"}, {"num": 796, "name": "Rotate String", "id": "lc_796", "slug": "rotate-string", "url": "https://leetcode.com/problems/rotate-string/"}, {"num": 3008, "name": "Find Beautiful Indices in the Given Array II", "id": "lc_3008", "slug": "find-beautiful-indices-in-the-given-array-ii", "url": "https://leetcode.com/problems/find-beautiful-indices-in-the-given-array-ii/"}, {"num": 459, "name": "Repeated Substring Pattern", "id": "lc_459", "slug": "repeated-substring-pattern", "url": "https://leetcode.com/problems/repeated-substring-pattern/"}]}, {"id": "heap_pattern_38", "title": "Heap \u2014 Pattern 38", "problems": [{"num": 215, "name": "Kth Largest Element in an Array", "id": "lc_215", "slug": "kth-largest-element-in-an-array", "url": "https://leetcode.com/problems/kth-largest-element-in-an-array/"}, {"num": 347, "name": "Top K Frequent Elements", "id": "lc_347", "slug": "top-k-frequent-elements", "url": "https://leetcode.com/problems/top-k-frequent-elements/"}, {"num": 451, "name": "Sort Characters By Frequency", "id": "lc_451", "slug": "sort-characters-by-frequency", "url": "https://leetcode.com/problems/sort-characters-by-frequency/"}, {"num": 506, "name": "Relative Ranks", "id": "lc_506", "slug": "relative-ranks", "url": "https://leetcode.com/problems/relative-ranks/"}, {"num": 703, "name": "Kth Largest Element in a Stream", "id": "lc_703", "slug": "kth-largest-element-in-a-stream", "url": "https://leetcode.com/problems/kth-largest-element-in-a-stream/"}, {"num": 973, "name": "K Closest Points to Origin", "id": "lc_973", "slug": "k-closest-points-to-origin", "url": "https://leetcode.com/problems/k-closest-points-to-origin/"}, {"num": 1046, "name": "Last Stone Weight", "id": "lc_1046", "slug": "last-stone-weight", "url": "https://leetcode.com/problems/last-stone-weight/"}, {"num": 2558, "name": "Take Gifts From the Richest Pile", "id": "lc_2558", "slug": "take-gifts-from-the-richest-pile", "url": "https://leetcode.com/problems/take-gifts-from-the-richest-pile/"}]}, {"id": "backtracking_pattern_42", "title": "Backtracking \u2014 Pattern 42", "problems": [{"num": 17, "name": "Letter Combinations of a Phone Number", "id": "lc_17", "slug": "letter-combinations-of-a-phone-number", "url": "https://leetcode.com/problems/letter-combinations-of-a-phone-number/"}, {"num": 77, "name": "Combinations", "id": "lc_77", "slug": "combinations", "url": "https://leetcode.com/problems/combinations/"}, {"num": 78, "name": "Subsets", "id": "lc_78", "slug": "subsets", "url": "https://leetcode.com/problems/subsets/"}, {"num": 90, "name": "Subsets II", "id": "lc_90", "slug": "subsets-ii", "url": "https://leetcode.com/problems/subsets-ii/"}]}];
+window.CODE150_CATEGORIES = CODE150_CATEGORIES;
+
+    // 6 Phases with clean grouped topics & rectified curriculum references
+    const CURRICULUM_PHASES = [
+      {
+        id: "phase_1",
+        title: "PHASE 1 — PYTHON + OOP + CLEAN DESIGN",
+        sections: [
+          {
+            id: "p1_s1",
+            title: "UNIT 1 — PYTHON CORE",
+            items: [
+              { name: "if / else & truthy/falsy", isCheckpoint: false },
+              { name: "loops (for, while, break, continue)", isCheckpoint: false },
+              { name: "match / case", isCheckpoint: false },
+              { name: "numbers (int, float, Decimal)", isCheckpoint: false },
+              { name: "strings (f-strings, methods, bytes)", isCheckpoint: false },
+              { name: "dict operations & dict.get()", isCheckpoint: false },
+              { name: "list operations & sets", isCheckpoint: false },
+              { name: "comprehensions", isCheckpoint: false },
+              { name: "unpacking (*args, **kwargs)", isCheckpoint: false },
+              { name: "function arguments & defaults", isCheckpoint: false },
+              { name: "is vs == (mutability & references)", isCheckpoint: false },
+              { name: "shallow copy vs deepcopy", isCheckpoint: false },
+              { name: "scope & closures (LEGB)", isCheckpoint: false },
+              { name: "iterables & iterators (iter, next)", isCheckpoint: false },
+              { name: "generators & yield", isCheckpoint: false },
+              { name: "dunder methods (__init__, __str__, __repr__, __eq__)", isCheckpoint: false },
+              { name: "CHECKPOINT: Generator pipeline", isCheckpoint: true },
+              { name: "CHECKPOINT: Explain every part without help", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p1_s2",
+            title: "UNIT 2 — OOP",
+            items: [
+              { name: "Classes / objects & instance vs class state", isCheckpoint: false },
+              { name: "encapsulation, _protected/__private & properties", isCheckpoint: false },
+              { name: "inheritance & polymorphism", isCheckpoint: false },
+              { name: "abstraction & interface separation", isCheckpoint: false },
+              { name: "composition & delegation (composition vs inheritance)", isCheckpoint: false },
+              { name: "ABC vs Protocol (structural vs nominal typing)", isCheckpoint: false },
+              { name: "dataclass vs NamedTuple (choosing between them)", isCheckpoint: false },
+              { name: "CHECKPOINT: Convert procedural code → OOP", isCheckpoint: true },
+              { name: "CHECKPOINT: Explain every design decision", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p1_s3",
+            title: "UNIT 3 — CLEAN PYTHON",
+            items: [
+              { name: "PEP8, PEP257 & Pythonic idioms", isCheckpoint: false },
+              { name: "enumerate & zip", isCheckpoint: false },
+              { name: "any, all & sorted(key=...)", isCheckpoint: false },
+              { name: "EAFP vs LBYL idioms", isCheckpoint: false },
+              { name: "code smells (God object, long function, feature envy, primitive obsession)", isCheckpoint: false },
+              { name: "type hints & mypy strict mode", isCheckpoint: false },
+              { name: "Ruff (linting & formatting)", isCheckpoint: false },
+              { name: "CHECKPOINT: Refactor real code", isCheckpoint: true },
+              { name: "CHECKPOINT: Ruff clean & mypy clean", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p1_s4",
+            title: "UNIT 4 — SOLID",
+            items: [
+              { name: "SRP (Single Responsibility Principle)", isCheckpoint: false },
+              { name: "OCP (Open-Closed Principle)", isCheckpoint: false },
+              { name: "LSP (Liskov Substitution Principle)", isCheckpoint: false },
+              { name: "ISP (Interface Segregation Principle)", isCheckpoint: false },
+              { name: "DIP (Dependency Inversion Principle)", isCheckpoint: false },
+              { name: "Dependency Injection (manual wiring vs containers)", isCheckpoint: false },
+              { name: "Identify, refactor & explain trade-offs of violations", isCheckpoint: false },
+              { name: "FINAL CHECKPOINT: Design a real OOP system", isCheckpoint: true },
+              { name: "FINAL CHECKPOINT: Implement it, test it, explain why & alternatives", isCheckpoint: true }
+            ]
+          }
+        ]
+      },
+      {
+        id: "phase_2",
+        title: "PHASE 2 — TESTING + DESIGN PATTERNS",
+        sections: [
+          {
+            id: "p2_s1",
+            title: "UNIT 1 — TESTING",
+            items: [
+              { name: "pytest basics, test discovery & assert statements", isCheckpoint: false },
+              { name: "fixtures, scopes (function/module/session) & conftest.py", isCheckpoint: false },
+              { name: "parametrize & test markers", isCheckpoint: false },
+              { name: "unittest.mock (Mock vs MagicMock & patch())", isCheckpoint: false },
+              { name: "mocking external boundaries (DB, HTTP)", isCheckpoint: false },
+              { name: "test doubles: fakes vs mocks vs stubs", isCheckpoint: false },
+              { name: "testing exceptions & test coverage tools", isCheckpoint: false },
+              { name: "CHECKPOINT: Write full test suite for an existing project", isCheckpoint: true },
+              { name: "CHECKPOINT: Mock at least one external dependency", isCheckpoint: true },
+              { name: "CHECKPOINT: Explain why each fixture exists", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p2_s2",
+            title: "UNIT 2 — DESIGN PATTERNS I",
+            items: [
+              { name: "Strategy pattern", isCheckpoint: false },
+              { name: "Factory pattern (Factory Method & Abstract Factory)", isCheckpoint: false },
+              { name: "Adapter pattern", isCheckpoint: false },
+              { name: "Decorator pattern (structural vs syntax)", isCheckpoint: false },
+              { name: "Template Method pattern", isCheckpoint: false },
+              { name: "Pattern overkill criteria (when simple code wins)", isCheckpoint: false },
+              { name: "CHECKPOINT: Implement Strategy + Factory in one mini-project", isCheckpoint: true },
+              { name: "CHECKPOINT: Explain why not to over-pattern simple code", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p2_s3",
+            title: "UNIT 3 — DESIGN PATTERNS II",
+            items: [
+              { name: "Chain of Responsibility", isCheckpoint: false },
+              { name: "Observer pattern (pub/sub vs direct calls)", isCheckpoint: false },
+              { name: "State pattern (behavior dynamic with internal state)", isCheckpoint: false },
+              { name: "Command pattern (undo/redo, request queues)", isCheckpoint: false },
+              { name: "CHECKPOINT: Implement Observer or State in a real feature", isCheckpoint: true },
+              { name: "CHECKPOINT: Explain the trade-off vs a simpler if/else", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p2_s4",
+            title: "UNIT 4 — DESIGN PATTERNS III + SELECTION",
+            items: [
+              { name: "Repository pattern", isCheckpoint: false },
+              { name: "Facade pattern", isCheckpoint: false },
+              { name: "Singleton pattern & why it is often an anti-pattern in Python", isCheckpoint: false },
+              { name: "Pattern selection decision matrix (symptom → candidate pattern mapping)", isCheckpoint: false },
+              { name: "FINAL CHECKPOINT: Combine 3+ patterns in one mini-project", isCheckpoint: true },
+              { name: "FINAL CHECKPOINT: Justify every pattern choice & where a pattern was NOT needed", isCheckpoint: true }
+            ]
+          }
+        ]
+      },
+      {
+        id: "phase_3",
+        title: "PHASE 3 — API DESIGN + BACKEND FRAMEWORK",
+        sections: [
+          {
+            id: "p3_s1",
+            title: "UNIT 1 — API DESIGN & COMMUNICATION",
+            items: [
+              { name: "Resource naming & versioning strategies", isCheckpoint: false },
+              { name: "Pagination models (offset vs cursor)", isCheckpoint: false },
+              { name: "Idempotency keys & error response shape standard", isCheckpoint: false },
+              { name: "HTTP verbs & status codes (200, 201, 204, 400, 401, 403, 404, 409, 422, 429, 500)", isCheckpoint: false },
+              { name: "REST maturity model & statelessness", isCheckpoint: false },
+              { name: "Class diagrams & sequence diagrams", isCheckpoint: false },
+              { name: "CHECKPOINT: Design a full API contract on paper before coding", isCheckpoint: true },
+              { name: "CHECKPOINT: Draw one sequence diagram for a real flow", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p3_s2",
+            title: "UNIT 2 — FASTAPI",
+            items: [
+              { name: "Routing, APIRouter & path/query parameters", isCheckpoint: false },
+              { name: "Request / response models & validation", isCheckpoint: false },
+              { name: "Dependency injection system (Depends)", isCheckpoint: false },
+              { name: "Middleware & background tasks", isCheckpoint: false },
+              { name: "Async endpoints (async def vs def) & error handling", isCheckpoint: false },
+              { name: "file uploads (UploadFile & streams)", isCheckpoint: false },
+              { name: "OpenAPI / Swagger auto-generated documentation", isCheckpoint: false },
+              { name: "CHECKPOINT: Build a working FastAPI service with 3+ endpoints", isCheckpoint: true },
+              { name: "CHECKPOINT: Auto-generated docs working", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p3_s3",
+            title: "UNIT 3 — PYDANTIC + SQL/POSTGRES",
+            items: [
+              { name: "Pydantic models, field_validator & BaseSettings", isCheckpoint: false },
+              { name: "Serialization & deserialization performance", isCheckpoint: false },
+              { name: "SQL joins & subqueries", isCheckpoint: false },
+              { name: "Window functions (ROW_NUMBER, RANK, LEAD/LAG)", isCheckpoint: false },
+              { name: "Common Table Expressions (CTEs) & EXPLAIN ANALYZE", isCheckpoint: false },
+              { name: "CHECKPOINT: Validate real request data with Pydantic", isCheckpoint: true },
+              { name: "CHECKPOINT: Write 3 non-trivial SQL queries against real data", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p3_s4",
+            title: "UNIT 4 — DATABASE LAYER",
+            items: [
+              { name: "Database normalization (1NF–3NF) & when to denormalize", isCheckpoint: false },
+              { name: "Transactions, ACID & isolation levels", isCheckpoint: false },
+              { name: "Dirty reads, phantom reads & deadlocks", isCheckpoint: false },
+              { name: "SQLAlchemy ORM vs Core & session lifecycle", isCheckpoint: false },
+              { name: "Relationship loading: lazy vs eager (joined, selectin)", isCheckpoint: false },
+              { name: "Alembic schema migrations", isCheckpoint: false },
+              { name: "Database indexing (B-tree, composite) & query optimization", isCheckpoint: false },
+              { name: "FINAL CHECKPOINT: Connect FastAPI to Postgres via SQLAlchemy", isCheckpoint: true },
+              { name: "FINAL CHECKPOINT: Run and explain EXPLAIN ANALYZE & add one index with measured improvement", isCheckpoint: true }
+            ]
+          }
+        ]
+      },
+      {
+        id: "phase_4",
+        title: "PHASE 4 — BACKEND INFRASTRUCTURE",
+        sections: [
+          {
+            id: "p4_s1",
+            title: "UNIT 1 — AUTH",
+            items: [
+              { name: "Session-based auth vs stateless JWT", isCheckpoint: false },
+              { name: "OAuth2 flow (password & authorization code)", isCheckpoint: false },
+              { name: "RBAC vs ABAC", isCheckpoint: false },
+              { name: "Password hashing (bcrypt/argon2) & refresh tokens", isCheckpoint: false },
+              { name: "CHECKPOINT: Implement working JWT auth on a real endpoint", isCheckpoint: true },
+              { name: "CHECKPOINT: Explain why refresh tokens exist", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p4_s2",
+            title: "UNIT 2 — CACHING + QUEUES",
+            items: [
+              { name: "Redis data structures (strings, hashes, sorted sets)", isCheckpoint: false },
+              { name: "Cache-aside pattern, TTL strategy & cache invalidation", isCheckpoint: false },
+              { name: "Celery basics with Redis/RabbitMQ broker", isCheckpoint: false },
+              { name: "Task retries with backoff & dead-letter queues (DLQ)", isCheckpoint: false },
+              { name: "Idempotent task design", isCheckpoint: false },
+              { name: "CHECKPOINT: Cache one real endpoint with Redis", isCheckpoint: true },
+              { name: "CHECKPOINT: Run one background job with Celery end-to-end", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p4_s3",
+            title: "UNIT 3 — OBSERVABILITY + CONFIG + DOCKER",
+            items: [
+              { name: "Structured JSON logging & correlation IDs", isCheckpoint: false },
+              { name: "Metrics vs logs vs distributed tracing", isCheckpoint: false },
+              { name: "12-factor config, .env handling & secrets vs config separation", isCheckpoint: false },
+              { name: "pathlib (file & folder paths)", isCheckpoint: false },
+              { name: "Dockerfile layering & multi-stage builds", isCheckpoint: false },
+              { name: "docker-compose for local full-stack dev", isCheckpoint: false },
+              { name: "CHECKPOINT: Dockerize the FastAPI + Postgres + Redis stack", isCheckpoint: true },
+              { name: "CHECKPOINT: docker-compose up runs cleanly", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p4_s4",
+            title: "UNIT 4 — GIT + SECURITY",
+            items: [
+              { name: "Branching strategy, rebase vs merge & PR review discipline", isCheckpoint: false },
+              { name: "SQL injection prevention & input validation", isCheckpoint: false },
+              { name: "Rate limiting (token bucket / sliding window) & CORS", isCheckpoint: false },
+              { name: "Secrets management (Vault / KMS, not just .env)", isCheckpoint: false },
+              { name: "FINAL CHECKPOINT: Full stack running in Docker with auth + caching + queue + rate limiting", isCheckpoint: true },
+              { name: "FINAL CHECKPOINT: Explain every security decision made", isCheckpoint: true }
+            ]
+          }
+        ]
+      },
+      {
+        id: "phase_5",
+        title: "PHASE 5 — ARCHITECTURE + CONCURRENCY",
+        sections: [
+          {
+            id: "p5_s1",
+            title: "UNIT 1 — LAYERED ARCHITECTURE",
+            items: [
+              { name: "Separation of concerns at system level", isCheckpoint: false },
+              { name: "Presentation, business & data layers", isCheckpoint: false },
+              { name: "Boundary rules (where business logic should NOT live)", isCheckpoint: false },
+              { name: "CHECKPOINT: Refactor one real project into explicit layers", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p5_s2",
+            title: "UNIT 2 — CLEAN & HEXAGONAL ARCHITECTURE",
+            items: [
+              { name: "The Dependency Rule & use cases at the center", isCheckpoint: false },
+              { name: "Ports and adapters (isolating domain from frameworks)", isCheckpoint: false },
+              { name: "Why web frameworks shouldn't leak into business domain", isCheckpoint: false },
+              { name: "CHECKPOINT: Identify where code violates dependency rule & fix violation", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p5_s3",
+            title: "UNIT 3 — REPOSITORY/SERVICE LAYERS + EVENT-DRIVEN",
+            items: [
+              { name: "Repository layer vs service layer responsibilities", isCheckpoint: false },
+              { name: "Event bus & publish/subscribe architecture", isCheckpoint: false },
+              { name: "Eventual consistency trade-offs & when event-driven is overkill", isCheckpoint: false },
+              { name: "CHECKPOINT: Split one god-service into repository + service layers", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p5_s4",
+            title: "UNIT 4 — CONCURRENCY & PERFORMANCE",
+            items: [
+              { name: "GIL implications (CPU vs I/O bounds)", isCheckpoint: false },
+              { name: "asyncio event loop, async/await & Task execution", isCheckpoint: false },
+              { name: "threading vs multiprocessing vs asyncio (decision matrix)", isCheckpoint: false },
+              { name: "Profiling with cProfile, timeit & memory profiling", isCheckpoint: false },
+              { name: "Identifying & fixing N+1 queries", isCheckpoint: false },
+              { name: "FINAL CHECKPOINT: Profile a real slow endpoint & fix bottleneck with measured before/after numbers", isCheckpoint: true }
+            ]
+          }
+        ]
+      },
+      {
+        id: "phase_6",
+        title: "PHASE 6 — SYSTEM DESIGN + APPLIED PRACTICE",
+        sections: [
+          {
+            id: "p6_s1",
+            title: "UNIT 1 — SYSTEM DESIGN FUNDAMENTALS",
+            items: [
+              { name: "Client-server model & DNS resolution", isCheckpoint: false },
+              { name: "Load balancing algorithms (round-robin, least-connections)", isCheckpoint: false },
+              { name: "Caching layers at system scale (client, CDN, gateway, Redis)", isCheckpoint: false },
+              { name: "CAP theorem in practice & back-of-envelope estimation", isCheckpoint: false },
+              { name: "CHECKPOINT: Design a URL shortener on paper & defend every component choice", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p6_s2",
+            title: "UNIT 2 — SCALABILITY & RELIABILITY",
+            items: [
+              { name: "Horizontal vs vertical scaling trade-offs", isCheckpoint: false },
+              { name: "Redundancy & failover strategies", isCheckpoint: false },
+              { name: "Circuit breakers, graceful degradation & health checks", isCheckpoint: false },
+              { name: "CHECKPOINT: Design a rate limiter on paper & explain failure modes", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p6_s3",
+            title: "UNIT 3 — DISTRIBUTED SYSTEMS",
+            items: [
+              { name: "Consistency models (strong vs eventual)", isCheckpoint: false },
+              { name: "Consensus basics (Raft/Paxos overview)", isCheckpoint: false },
+              { name: "Partitioning, sharding & database replication", isCheckpoint: false },
+              { name: "CHECKPOINT: Design a chat app or feed system & explain consistency trade-offs", isCheckpoint: true }
+            ]
+          },
+          {
+            id: "p6_s4",
+            title: "UNIT 4 — APPLIED PRACTICE",
+            items: [
+              // Rectified: removed legacy "Modules 7-11" phrasing
+              { name: "Combine complete backend stack (API, DB, Infra & Architecture) into one production build", isCheckpoint: false },
+              { name: "Document design reasoning & trade-offs considered/rejected", isCheckpoint: false },
+              { name: "Production deployment (staging/cloud, not just localhost)", isCheckpoint: false },
+              { name: "FINAL CHECKPOINT: One production-grade backend project, fully deployed", isCheckpoint: true },
+              { name: "FINAL CHECKPOINT: Written doc explaining every major decision & alternative", isCheckpoint: true },
+              { name: "FINAL CHECKPOINT: Can defend the design cold, without notes", isCheckpoint: true }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // Status map (Clean UI, No Emojis)
+    const STATUS_MAP = {
+      NOT_LEARNED: {
+        label: "Not learned",
+        dotColor: "bg-rose-500",
+        btnClass: "bg-rose-50/70 border-rose-200 text-rose-700 hover:bg-rose-100/60"
+      },
+      LEARNING: {
+        label: "Learning / with help",
+        dotColor: "bg-amber-500",
+        btnClass: "bg-amber-50/70 border-amber-200 text-amber-700 hover:bg-amber-100/60"
+      },
+      MASTERED: {
+        label: "Mastered",
+        dotColor: "bg-emerald-500",
+        btnClass: "bg-emerald-50/70 border-emerald-200 text-emerald-700 hover:bg-emerald-100/60"
+      }
+    };
+
+    const CODE150_STATUS_MAP = {
+      NOT_COMPLETED: {
+        label: "Not completed",
+        dotColor: "bg-rose-500",
+        btnClass: "bg-rose-50/70 border-rose-200 text-rose-700 hover:bg-rose-100/60"
+      },
+      WORK_MORE: {
+        label: "Work more",
+        dotColor: "bg-amber-500",
+        btnClass: "bg-amber-50/70 border-amber-200 text-amber-700 hover:bg-amber-100/60"
+      },
+      COMPLETED: {
+        label: "Completed",
+        dotColor: "bg-emerald-500",
+        btnClass: "bg-emerald-50/70 border-emerald-200 text-emerald-700 hover:bg-emerald-100/60"
+      }
+    };
+
+    const STORAGE_KEY = "python_backend_tracker_state_v4";
+    const NOTES_STORAGE_KEY = "python_backend_tracker_notes_v1";
+    const CODE150_STORAGE_KEY = "python_code150_state_v1";
+    const CODE150_REVISED_KEY = "python_code150_revised_v1";
+
+    let activeTrackerMode = "curriculum";
+    let trackerState = {};
+    let trackerNotes = {};
+    let code150State = {};
+    let code150Revised = {};
+    let collapsedCode150Cats = {};
+    let currentNotesKey = null;
+    let notesSaveTimeout = null;
+    let notesViewMode = "write";
+    let isNotesFullscreen = false;
+    let activeFilter = "ALL";
+    let activeSearch = "";
+    let collapsedPhases = {};
+
+    function getCode150Categories() {
+      if (window.CODE150_CATEGORIES && Array.isArray(window.CODE150_CATEGORIES)) {
+        return window.CODE150_CATEGORIES;
+      }
+      return [];
+    }
+
+    // Supabase Configuration & Client
+    const SUPABASE_URL = "https://kafochgrpqztvdajdwmq.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_JLkDBdlAFIvYIQvXwmfC1w_kyi76TZb";
+    let supabaseClient = null;
+    let currentUser = null;
+    let cloudSyncDebounce = null;
+
+    try {
+      if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (err) {
+      console.error("Supabase client init error:", err);
+    }
+
+    // Rectified: generate stable keys from topic name rather than array index
+    function generateKey(phaseId, sectionId, it) {
+      const slug = it.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 36);
+      return `${phaseId}__${sectionId}__${slug}`;
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) trackerState = JSON.parse(raw);
+      } catch (e) {
+        trackerState = {};
+      }
+      try {
+        const rawNotes = localStorage.getItem(NOTES_STORAGE_KEY);
+        if (rawNotes) trackerNotes = JSON.parse(rawNotes);
+      } catch (e) {
+        trackerNotes = {};
+      }
+      try {
+        const rawCode150 = localStorage.getItem(CODE150_STORAGE_KEY);
+        if (rawCode150) code150State = JSON.parse(rawCode150);
+      } catch (e) {
+        code150State = {};
+      }
+      try {
+        const rawRevised = localStorage.getItem(CODE150_REVISED_KEY);
+        if (rawRevised) code150Revised = JSON.parse(rawRevised);
+      } catch (e) {
+        code150Revised = {};
+      }
+
+      CURRICULUM_PHASES.forEach(p => {
+        p.sections.forEach(s => {
+          s.items.forEach((it) => {
+            const key = generateKey(p.id, s.id, it);
+            if (!trackerState[key]) trackerState[key] = "NOT_LEARNED";
+          });
+        });
+      });
+
+      getCode150Categories().forEach(c => {
+        c.problems.forEach(p => {
+          if (!code150State[p.id]) code150State[p.id] = "NOT_COMPLETED";
+        });
+      });
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(trackerState));
+        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(trackerNotes));
+        localStorage.setItem(CODE150_STORAGE_KEY, JSON.stringify(code150State));
+        localStorage.setItem(CODE150_REVISED_KEY, JSON.stringify(code150Revised));
+      } catch (e) {
+        console.error(e);
+      }
+      updateVisualDashboard();
+      triggerDebouncedCloudSync();
+    }
+
+    function saveNotesOnly() {
+      try {
+        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(trackerNotes));
+      } catch (e) {
+        console.error(e);
+      }
+      if (activeTrackerMode === 'curriculum') {
+        renderCurriculumTables();
+      } else {
+        renderCode150Tables();
+      }
+      triggerDebouncedCloudSync();
+    }
+
+    function showToast(type, msg) {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      const bg = { error:'bg-rose-600', warning:'bg-amber-600', success:'bg-emerald-600', info:'bg-indigo-600' }[type] || 'bg-indigo-600';
+      t.className = `${bg} text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-mono font-medium flex items-center gap-2 pointer-events-auto transition-all duration-300 translate-y-2 opacity-0 max-w-sm`;
+      t.innerHTML = `<span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.classList.remove('translate-y-2','opacity-0'), 10);
+      setTimeout(() => {
+        t.classList.add('opacity-0','translate-y-2');
+        setTimeout(() => t.remove(), 300);
+      }, 2400);
+    }
+
+    // Custom Dropdown Interactive Handling
+    function toggleCustomMenu(key, event) {
+      event.stopPropagation();
+      const menu = document.getElementById(`menu-${key}`);
+      const isHidden = menu.classList.contains('hidden');
+      closeAllCustomMenus();
+      if (isHidden) {
+        menu.classList.remove('hidden');
+      }
+    }
+
+    function closeAllCustomMenus() {
+      document.querySelectorAll('.custom-status-menu').forEach(m => m.classList.add('hidden'));
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.custom-dropdown-container')) {
+        closeAllCustomMenus();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAllCustomMenus();
+        closeResetModal();
+        closeResetRevisionsModal();
+      }
+    });
+
+    function selectCustomStatus(key, newStatus, event) {
+      if (event) event.stopPropagation();
+      trackerState[key] = newStatus;
+      saveData();
+      closeAllCustomMenus();
+
+      // Update button trigger UI
+      const btn = document.getElementById(`btn-${key}`);
+      const dot = document.getElementById(`dot-${key}`);
+      const label = document.getElementById(`label-${key}`);
+      const conf = STATUS_MAP[newStatus];
+
+      if (btn && dot && label && conf) {
+        btn.className = `custom-dropdown-btn w-7 h-7 sm:w-auto flex items-center justify-center sm:justify-between gap-1 sm:gap-2.5 p-0 sm:px-3 sm:py-1.5 rounded-lg border text-xs font-mono font-semibold transition-all shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 badge-pop ${conf.btnClass}`;
+        btn.title = conf.label;
+        dot.className = `w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-full ${conf.dotColor} shrink-0`;
+        label.textContent = conf.label;
+      }
+
+      // Update active checkmarks
+      const menu = document.getElementById(`menu-${key}`);
+      if (menu) {
+        menu.querySelectorAll('.menu-check').forEach(ch => ch.classList.add('hidden'));
+        const activeCheck = document.getElementById(`check-${key}-${newStatus}`);
+        if (activeCheck) activeCheck.classList.remove('hidden');
+      }
+
+      showToast('success', `Status: ${STATUS_MAP[newStatus].label}`);
+      if (activeFilter !== "ALL") {
+        applyFiltering();
+      }
+    }
+
+    function selectCode150Status(key, newStatus, event) {
+      if (event) event.stopPropagation();
+      code150State[key] = newStatus;
+      saveData();
+      closeAllCustomMenus();
+
+      const btn = document.getElementById(`btn-${key}`);
+      const dot = document.getElementById(`dot-${key}`);
+      const label = document.getElementById(`label-${key}`);
+      const conf = CODE150_STATUS_MAP[newStatus];
+
+      if (btn && dot && label && conf) {
+        btn.className = `custom-dropdown-btn w-7 h-7 sm:w-auto flex items-center justify-center sm:justify-between gap-1 sm:gap-2.5 p-0 sm:px-3 sm:py-1.5 rounded-lg border text-xs font-mono font-semibold transition-all shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 badge-pop ${conf.btnClass}`;
+        btn.title = conf.label;
+        dot.className = `w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-full ${conf.dotColor} shrink-0`;
+        label.textContent = conf.label;
+      }
+
+      const menu = document.getElementById(`menu-${key}`);
+      if (menu) {
+        menu.querySelectorAll('.menu-check').forEach(ch => ch.classList.add('hidden'));
+        const activeCheck = document.getElementById(`check-${key}-${newStatus}`);
+        if (activeCheck) activeCheck.classList.remove('hidden');
+      }
+
+      showToast('success', `Status: ${conf ? conf.label : newStatus}`);
+      if (activeFilter !== "ALL") {
+        applyFiltering();
+      }
+    }
+
+    function toggleProblemRevised(key, isChecked) {
+      code150Revised[key] = isChecked;
+      saveData();
+      
+      const row = document.getElementById(`row-code150-${key}`);
+      if (row) {
+        const revLabel = row.querySelector('.revised-label-pill');
+        if (revLabel) {
+          if (isChecked) {
+            revLabel.className = "revised-label-pill w-7 h-7 sm:w-auto inline-flex items-center justify-center sm:gap-1.5 p-0 sm:px-2.5 sm:py-1 sm:rounded-lg sm:border transition-all cursor-pointer select-none sm:bg-indigo-50 sm:border-indigo-200 sm:text-indigo-700 sm:font-bold sm:shadow-2xs";
+            const spanText = revLabel.querySelector('.revised-text');
+            if (spanText) spanText.textContent = "Revised";
+          } else {
+            revLabel.className = "revised-label-pill w-7 h-7 sm:w-auto inline-flex items-center justify-center sm:gap-1.5 p-0 sm:px-2.5 sm:py-1 sm:rounded-lg sm:border transition-all cursor-pointer select-none sm:bg-slate-50 sm:border-slate-200 sm:text-slate-500 sm:hover:bg-slate-100/70";
+            const spanText = revLabel.querySelector('.revised-text');
+            if (spanText) spanText.textContent = "Revise";
+          }
+        }
+      }
+
+      updateVisualDashboard();
+      showToast(isChecked ? 'success' : 'info', isChecked ? 'Marked as revised' : 'Revision mark removed');
+    }
+
+    function updateVisualDashboard() {
+      if (activeTrackerMode === 'code150') {
+        const cats = getCode150Categories();
+        let total = 0, completed = 0, workMore = 0, notCompleted = 0, revised = 0;
+
+        cats.forEach(c => {
+          let cTotal = c.problems.length;
+          let cCompleted = 0;
+
+          c.problems.forEach(p => {
+            total++;
+            const st = code150State[p.id] || "NOT_COMPLETED";
+            if (st === "COMPLETED") { completed++; cCompleted++; }
+            else if (st === "WORK_MORE") workMore++;
+            else notCompleted++;
+
+            if (code150Revised[p.id]) revised++;
+          });
+
+          const cPct = cTotal > 0 ? Math.round((cCompleted / cTotal) * 100) : 0;
+          const cStat = document.getElementById(`cat-stat-${c.id}`);
+          const cBar = document.getElementById(`cat-bar-${c.id}`);
+          if (cStat) cStat.textContent = `${cCompleted}/${cTotal} (${cPct}%)`;
+          if (cBar) cBar.style.width = `${cPct}%`;
+
+          const rBar = document.getElementById(`radar-bar-${c.id}`);
+          const rText = document.getElementById(`radar-stat-${c.id}`);
+          if (rBar) rBar.style.width = `${cPct}%`;
+          if (rText) rText.textContent = `${cPct}%`;
+        });
+
+        const cPct = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const wPct = total > 0 ? Math.round((workMore / total) * 100) : 0;
+        const nPct = total > 0 ? Math.max(0, 100 - cPct - wPct) : 100;
+        const rPct = total > 0 ? Math.round((revised / total) * 100) : 0;
+
+        const totLabel = document.getElementById('total-topics-label');
+        if (totLabel) totLabel.textContent = `${total} LEETCODE PROBLEMS (11 PATTERNS)`;
+
+        const mCnt = document.getElementById('vis-mastered-count');
+        const mPctEl = document.getElementById('vis-mastered-pct');
+        if (mCnt) mCnt.childNodes[0].textContent = completed + ' ';
+        if (mPctEl) mPctEl.textContent = `(${cPct}%)`;
+
+        const lCnt = document.getElementById('vis-learning-count');
+        const lPctEl = document.getElementById('vis-learning-pct');
+        if (lCnt) lCnt.childNodes[0].textContent = workMore + ' ';
+        if (lPctEl) lPctEl.textContent = `(${wPct}%)`;
+
+        const nCnt = document.getElementById('vis-notlearned-count');
+        const nPctEl = document.getElementById('vis-notlearned-pct');
+        if (nCnt) nCnt.childNodes[0].textContent = notCompleted + ' ';
+        if (nPctEl) nPctEl.textContent = `(${nPct}%)`;
+
+        const rCnt = document.getElementById('vis-revised-count');
+        const rPctEl = document.getElementById('vis-revised-pct');
+        if (rCnt) rCnt.childNodes[0].textContent = revised + ' ';
+        if (rPctEl) rPctEl.textContent = `(${rPct}%)`;
+
+        const bM = document.getElementById('vis-bar-mastered');
+        const bL = document.getElementById('vis-bar-learning');
+        const bN = document.getElementById('vis-bar-notlearned');
+        if (bM) bM.style.width = `${cPct}%`;
+        if (bL) bL.style.width = `${wPct}%`;
+        if (bN) bN.style.width = `${nPct}%`;
+
+        const ovLabel = document.getElementById('vis-overall-label');
+        if (ovLabel) ovLabel.textContent = `${cPct}% Complete (${completed} / ${total} Problems)`;
+
+        const fAll = document.getElementById('tab-ALL');
+        const fN = document.getElementById('label-filter-nl');
+        const fL = document.getElementById('label-filter-l');
+        const fM = document.getElementById('label-filter-m');
+        if (fAll) fAll.textContent = `All (${total})`;
+        if (fN) fN.textContent = `Not completed (${notCompleted})`;
+        if (fL) fL.textContent = `Work more (${workMore})`;
+        if (fM) fM.textContent = `Completed (${completed})`;
+        return;
+      }
+
+      // Curriculum Mode
+      let total = 0, mastered = 0, learning = 0, notLearned = 0;
+
+      CURRICULUM_PHASES.forEach(p => {
+        let pTotal = 0;
+        let pMastered = 0;
+
+        p.sections.forEach(s => {
+          s.items.forEach((it) => {
+            total++;
+            pTotal++;
+            const key = generateKey(p.id, s.id, it);
+            const status = trackerState[key] || "NOT_LEARNED";
+            if (status === "MASTERED") { mastered++; pMastered++; }
+            else if (status === "LEARNING") learning++;
+            else notLearned++;
+          });
+        });
+
+        const pPct = pTotal > 0 ? Math.round((pMastered / pTotal) * 100) : 0;
+        const pStat = document.getElementById(`phase-stat-${p.id}`);
+        const pBar = document.getElementById(`phase-bar-${p.id}`);
+        if (pStat) pStat.textContent = `${pMastered}/${pTotal} (${pPct}%)`;
+        if (pBar) pBar.style.width = `${pPct}%`;
+
+        const rBar = document.getElementById(`radar-bar-${p.id}`);
+        const rText = document.getElementById(`radar-stat-${p.id}`);
+        if (rBar) rBar.style.width = `${pPct}%`;
+        if (rText) rText.textContent = `${pPct}%`;
+      });
+
+      const mPct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+      const lPct = total > 0 ? Math.round((learning / total) * 100) : 0;
+      const nPct = total > 0 ? Math.max(0, 100 - mPct - lPct) : 100;
+
+      const totLabel = document.getElementById('total-topics-label');
+      if (totLabel) totLabel.textContent = `${total} TOTAL SKILLS & CHECKPOINTS`;
+
+      const mCnt = document.getElementById('vis-mastered-count');
+      const mPctEl = document.getElementById('vis-mastered-pct');
+      if (mCnt) mCnt.childNodes[0].textContent = mastered + ' ';
+      if (mPctEl) mPctEl.textContent = `(${mPct}%)`;
+
+      const lCnt = document.getElementById('vis-learning-count');
+      const lPctEl = document.getElementById('vis-learning-pct');
+      if (lCnt) lCnt.childNodes[0].textContent = learning + ' ';
+      if (lPctEl) lPctEl.textContent = `(${lPct}%)`;
+
+      const nCnt = document.getElementById('vis-notlearned-count');
+      const nPctEl = document.getElementById('vis-notlearned-pct');
+      if (nCnt) nCnt.childNodes[0].textContent = notLearned + ' ';
+      if (nPctEl) nPctEl.textContent = `(${nPct}%)`;
+
+      const bM = document.getElementById('vis-bar-mastered');
+      const bL = document.getElementById('vis-bar-learning');
+      const bN = document.getElementById('vis-bar-notlearned');
+      if (bM) bM.style.width = `${mPct}%`;
+      if (bL) bL.style.width = `${lPct}%`;
+      if (bN) bN.style.width = `${nPct}%`;
+
+      const ovLabel = document.getElementById('vis-overall-label');
+      if (ovLabel) ovLabel.textContent = `${mPct}% Complete (${mastered} / ${total} Skills)`;
+
+      const fAll = document.getElementById('tab-ALL');
+      const fN = document.getElementById('label-filter-nl');
+      const fL = document.getElementById('label-filter-l');
+      const fM = document.getElementById('label-filter-m');
+      if (fAll) fAll.textContent = `All (${total})`;
+      if (fN) fN.textContent = `Not learned (${notLearned})`;
+      if (fL) fL.textContent = `Learning (${learning})`;
+      if (fM) fM.textContent = `Mastered (${mastered})`;
+    }
+
+    function renderPhaseRadar() {
+      const radar = document.getElementById('phases-visual-radar');
+      if (!radar) return;
+      radar.innerHTML = "";
+
+      if (activeTrackerMode === 'curriculum') {
+        CURRICULUM_PHASES.forEach((p, idx) => {
+          const shortName = p.title.replace(/PHASE \d+ — /, '');
+          const a = document.createElement('a');
+          a.href = `#card-${p.id}`;
+          a.className = "p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-all block group";
+          a.innerHTML = `
+            <div class="flex items-center justify-between text-[11px] font-mono">
+              <span class="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">Phase ${idx+1}</span>
+              <span id="radar-stat-${p.id}" class="text-[10px] font-mono font-bold text-indigo-600">0%</span>
+            </div>
+            <div class="text-[11px] font-medium text-gray-600 truncate mt-1" title="${shortName}">${shortName}</div>
+            <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <div id="radar-bar-${p.id}" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+            </div>
+          `;
+          radar.appendChild(a);
+        });
+      } else {
+        const cats = getCode150Categories();
+        cats.forEach((c, idx) => {
+          const a = document.createElement('a');
+          a.href = `#card-code150-${c.id}`;
+          a.className = "p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-all block group";
+          a.innerHTML = `
+            <div class="flex items-center justify-between text-[11px] font-mono">
+              <span class="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">Pattern ${idx+1}</span>
+              <span id="radar-stat-${c.id}" class="text-[10px] font-mono font-bold text-indigo-600">0%</span>
+            </div>
+            <div class="text-[11px] font-medium text-gray-600 truncate mt-1" title="${c.title}">${c.title}</div>
+            <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <div id="radar-bar-${c.id}" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+            </div>
+          `;
+          radar.appendChild(a);
+        });
+      }
+    }
+
+    function togglePhase(phaseId) {
+      collapsedPhases[phaseId] = !collapsedPhases[phaseId];
+      const wrap = document.getElementById(`wrap-${phaseId}`);
+      const icon = document.getElementById(`chevron-${phaseId}`);
+      if (wrap && icon) {
+        if (collapsedPhases[phaseId]) {
+          wrap.classList.add('hidden');
+          icon.style.transform = 'rotate(-90deg)';
+        } else {
+          wrap.classList.remove('hidden');
+          icon.style.transform = 'rotate(0deg)';
+        }
+      }
+    }
+
+    function toggleCode150Category(catId) {
+      collapsedCode150Cats[catId] = !collapsedCode150Cats[catId];
+      const wrap = document.getElementById(`wrap-code150-${catId}`);
+      const icon = document.getElementById(`chevron-code150-${catId}`);
+      if (wrap && icon) {
+        if (collapsedCode150Cats[catId]) {
+          wrap.classList.add('hidden');
+          icon.style.transform = 'rotate(-90deg)';
+        } else {
+          wrap.classList.remove('hidden');
+          icon.style.transform = 'rotate(0deg)';
+        }
+      }
+    }
+
+    function toggleAllPhases(expand) {
+      CURRICULUM_PHASES.forEach(p => {
+        collapsedPhases[p.id] = !expand;
+        const wrap = document.getElementById(`wrap-${p.id}`);
+        const icon = document.getElementById(`chevron-${p.id}`);
+        if (wrap && icon) {
+          if (!expand) {
+            wrap.classList.add('hidden');
+            icon.style.transform = 'rotate(-90deg)';
+          } else {
+            wrap.classList.remove('hidden');
+            icon.style.transform = 'rotate(0deg)';
+          }
+        }
+      });
+      showToast('info', expand ? 'All phases expanded' : 'All phases collapsed');
+    }
+
+    function toggleAllCards(expand) {
+      if (activeTrackerMode === 'code150') {
+        const cats = getCode150Categories();
+        cats.forEach(c => {
+          collapsedCode150Cats[c.id] = !expand;
+          const wrap = document.getElementById(`wrap-code150-${c.id}`);
+          const icon = document.getElementById(`chevron-code150-${c.id}`);
+          if (wrap && icon) {
+            if (!expand) {
+              wrap.classList.add('hidden');
+              icon.style.transform = 'rotate(-90deg)';
+            } else {
+              wrap.classList.remove('hidden');
+              icon.style.transform = 'rotate(0deg)';
+            }
+          }
+        });
+        showToast('info', expand ? 'All patterns expanded' : 'All patterns collapsed');
+      } else {
+        toggleAllPhases(expand);
+      }
+    }
+
+    function switchTrackerMode(mode) {
+      activeTrackerMode = mode;
+      try {
+        localStorage.setItem('sde_active_tracker_mode', mode);
+        const targetSearch = mode === 'code150' ? '?view=code150' : '';
+        if (window.location.search !== targetSearch && !window.location.hash.includes('login')) {
+          const targetUrl = mode === 'code150' ? `${window.location.pathname}?view=code150` : window.location.pathname;
+          window.history.replaceState(null, '', targetUrl);
+        }
+      } catch (e) {}
+      const btnCurriculum = document.getElementById('btn-mode-curriculum');
+      const btnCode150 = document.getElementById('btn-mode-code150');
+      const phasesContainer = document.getElementById('phases-container');
+      const code150Container = document.getElementById('code150-container');
+      const btnResetRevisions = document.getElementById('btn-reset-revisions');
+      const pillRevisedBox = document.getElementById('pill-revised-box');
+
+      const headerBadge = document.getElementById('header-top-badge');
+      const headerTitle = document.getElementById('header-main-title');
+      const overviewBadge = document.getElementById('overview-badge');
+      const overviewTitle = document.getElementById('overview-title');
+      const radarTitle = document.getElementById('radar-title-label');
+
+      if (mode === 'code150') {
+        if (btnCode150) {
+          btnCode150.className = "px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all bg-white text-indigo-700 shadow-2xs flex items-center gap-1.5 cursor-pointer";
+        }
+        if (btnCurriculum) {
+          btnCurriculum.className = "px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer";
+        }
+
+        if (phasesContainer) phasesContainer.classList.add('hidden');
+        if (code150Container) code150Container.classList.remove('hidden');
+        if (btnResetRevisions) btnResetRevisions.classList.remove('hidden');
+        if (pillRevisedBox) pillRevisedBox.classList.remove('hidden');
+
+        if (headerBadge) headerBadge.textContent = "LEETCODE 150";
+        if (headerTitle) headerTitle.textContent = "Code 150 Patterns & Problem Tracker";
+        if (overviewBadge) overviewBadge.innerHTML = `<i data-lucide="code" class="w-3.5 h-3.5 text-indigo-600"></i> LEETCODE 150 PATTERNS`;
+        if (overviewTitle) overviewTitle.textContent = "Code 150 Progress & Revision";
+        if (radarTitle) radarTitle.innerHTML = `<i data-lucide="layout-grid" class="w-3.5 h-3.5 text-indigo-600"></i> Patterns at a Glance`;
+
+        const p1 = document.getElementById('pill-title-1');
+        const p2 = document.getElementById('pill-title-2');
+        const p3 = document.getElementById('pill-title-3');
+        if (p1) p1.textContent = "Completed";
+        if (p2) p2.textContent = "Work more";
+        if (p3) p3.textContent = "Not completed";
+
+        renderPhaseRadar();
+        renderCode150Tables();
+        updateVisualDashboard();
+        applyFiltering();
+      } else {
+        if (btnCurriculum) {
+          btnCurriculum.className = "px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all bg-white text-indigo-700 shadow-2xs flex items-center gap-1.5 cursor-pointer";
+        }
+        if (btnCode150) {
+          btnCode150.className = "px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer";
+        }
+
+        if (code150Container) code150Container.classList.add('hidden');
+        if (phasesContainer) phasesContainer.classList.remove('hidden');
+        if (btnResetRevisions) btnResetRevisions.classList.add('hidden');
+        if (pillRevisedBox) pillRevisedBox.classList.add('hidden');
+
+        if (headerBadge) headerBadge.textContent = "BACKEND SYLLABUS";
+        if (headerTitle) headerTitle.textContent = "Python Backend Engineering Progress";
+        if (overviewBadge) overviewBadge.innerHTML = `<i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-600"></i> CURRICULUM OVERVIEW`;
+        if (overviewTitle) overviewTitle.textContent = "Syllabus Progress & Completion";
+        if (radarTitle) radarTitle.innerHTML = `<i data-lucide="layout-grid" class="w-3.5 h-3.5 text-indigo-600"></i> Phases at a Glance`;
+
+        const p1 = document.getElementById('pill-title-1');
+        const p2 = document.getElementById('pill-title-2');
+        const p3 = document.getElementById('pill-title-3');
+        if (p1) p1.textContent = "Mastered";
+        if (p2) p2.textContent = "Learning / Help";
+        if (p3) p3.textContent = "Not Learned";
+
+        renderPhaseRadar();
+        renderCurriculumTables();
+        updateVisualDashboard();
+        applyFiltering();
+      }
+      lucide.createIcons();
+    }
+
+    function setFilter(filterKey) {
+      activeFilter = filterKey;
+      document.querySelectorAll('.filter-tab').forEach(b => {
+        b.className = 'filter-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5';
+      });
+      const activeBtn = document.getElementById(`tab-${filterKey}`);
+      if (activeBtn) {
+        activeBtn.className = 'filter-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all bg-indigo-600 text-white shadow-xs flex items-center gap-1.5';
+      }
+      applyFiltering();
+    }
+
+    function onSearchChange(val) {
+      activeSearch = val.toLowerCase().trim();
+      applyFiltering();
+    }
+
+    function applyFiltering() {
+      if (activeTrackerMode === 'curriculum') {
+        CURRICULUM_PHASES.forEach(p => {
+          let phaseVisibleCount = 0;
+
+          p.sections.forEach(s => {
+            let sectionVisibleCount = 0;
+
+            s.items.forEach((it) => {
+              const key = generateKey(p.id, s.id, it);
+              const row = document.getElementById(`row-${key}`);
+              if (!row) return;
+
+              const st = trackerState[key] || "NOT_LEARNED";
+              const matchFilter = (activeFilter === "ALL") || (st === activeFilter);
+              let matchSearch = true;
+              if (activeSearch) {
+                matchSearch = it.name.toLowerCase().includes(activeSearch) ||
+                              s.title.toLowerCase().includes(activeSearch) ||
+                              p.title.toLowerCase().includes(activeSearch);
+              }
+
+              if (matchFilter && matchSearch) {
+                row.classList.remove('hidden');
+                sectionVisibleCount++;
+                phaseVisibleCount++;
+              } else {
+                row.classList.add('hidden');
+              }
+            });
+
+            const secEl = document.getElementById(`sec-wrap-${s.id}`);
+            if (secEl) {
+              if (sectionVisibleCount === 0) secEl.classList.add('hidden');
+              else secEl.classList.remove('hidden');
+            }
+          });
+
+          const card = document.getElementById(`card-${p.id}`);
+          if (card) {
+            if (phaseVisibleCount === 0) card.classList.add('hidden');
+            else card.classList.remove('hidden');
+          }
+        });
+      } else {
+        // Code 150 filtering
+        const cats = getCode150Categories();
+        cats.forEach(c => {
+          let catVisibleCount = 0;
+
+          c.problems.forEach(p => {
+            const row = document.getElementById(`row-code150-${p.id}`);
+            if (!row) return;
+
+            const st = code150State[p.id] || "NOT_COMPLETED";
+            let matchFilter = (activeFilter === "ALL");
+            if (activeFilter === "NOT_LEARNED" && st === "NOT_COMPLETED") matchFilter = true;
+            if (activeFilter === "LEARNING" && st === "WORK_MORE") matchFilter = true;
+            if (activeFilter === "MASTERED" && st === "COMPLETED") matchFilter = true;
+
+            let matchSearch = true;
+            if (activeSearch) {
+              matchSearch = p.name.toLowerCase().includes(activeSearch) ||
+                            String(p.num).includes(activeSearch) ||
+                            c.title.toLowerCase().includes(activeSearch);
+            }
+
+            if (matchFilter && matchSearch) {
+              row.classList.remove('hidden');
+              catVisibleCount++;
+            } else {
+              row.classList.add('hidden');
+            }
+          });
+
+          const card = document.getElementById(`card-code150-${c.id}`);
+          if (card) {
+            if (catVisibleCount === 0) card.classList.add('hidden');
+            else card.classList.remove('hidden');
+          }
+        });
+      }
+    }
+
+    // Render Clean Tables with Custom Dropdown
+    function renderCurriculumTables() {
+      const container = document.getElementById('phases-container');
+      container.innerHTML = "";
+
+      CURRICULUM_PHASES.forEach((p, pIdx) => {
+        const card = document.createElement('div');
+        card.id = `card-${p.id}`;
+        card.className = "bg-white border border-gray-200 rounded-2xl shadow-sm overflow-visible scroll-mt-20";
+
+        // Phase Header
+        const headerHtml = `
+          <div onclick="togglePhase('${p.id}')" class="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 gap-3 cursor-pointer hover:bg-gray-50/80 select-none bg-white transition-colors rounded-t-2xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 font-mono font-bold text-sm shrink-0 shadow-2xs">
+                P${pIdx+1}
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-gray-900 tracking-tight">${p.title}</h3>
+                <p class="text-xs text-gray-500 font-mono">${p.sections.length} Units • Structured Breakdown</p>
+              </div>
+            </div>
+
+            <!-- Right: Phase Stats & Chevron -->
+            <div class="flex items-center gap-4 self-end md:self-center shrink-0">
+              <div class="text-right font-mono min-w-[140px]">
+                <div class="text-xs font-bold text-gray-900" id="phase-stat-${p.id}">0% Mastered</div>
+                <div class="w-36 bg-gray-100 rounded-full h-1.5 mt-1 ml-auto overflow-hidden">
+                  <div id="phase-bar-${p.id}" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 transition-transform duration-200" id="chevron-${p.id}">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Units / Sections Tables
+        let sectionsHtml = `<div id="wrap-${p.id}" class="divide-y divide-gray-200">`;
+
+        p.sections.forEach(s => {
+          let rowsHtml = "";
+          s.items.forEach((it, idx) => {
+            const key = generateKey(p.id, s.id, it);
+            const st = trackerState[key] || "NOT_LEARNED";
+            const conf = STATUS_MAP[st];
+
+            const isCheckpoint = it.isCheckpoint;
+            const rowClass = isCheckpoint 
+              ? "bg-indigo-50/40 hover:bg-indigo-50/70 border-l-4 border-l-indigo-600 transition-colors" 
+              : "hover:bg-gray-50/70 transition-colors";
+
+            rowsHtml += `
+              <tr class="${rowClass}" id="row-${key}">
+                <!-- Sequence Index -->
+                <td class="px-1 sm:px-3 py-3 font-mono text-gray-400 font-semibold align-middle whitespace-nowrap text-xs text-center w-6 sm:w-12">
+                  ${idx + 1}
+                </td>
+
+                <!-- Topic / Skill Item -->
+                <td class="pl-1 pr-2 sm:px-4 py-3 align-middle">
+                  <div class="flex items-center gap-2.5">
+                    ${isCheckpoint 
+                      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 shrink-0">CHECKPOINT</span>` 
+                      : `<span class="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>`
+                    }
+                    <span class="text-xs ${isCheckpoint ? 'font-bold text-indigo-950' : 'font-medium text-gray-800'}">
+                      ${it.name.replace(/^(CHECKPOINT|FINAL CHECKPOINT):\s*/, '')}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Notes Column (Between Skill and Status) -->
+                <td class="px-1.5 sm:px-3 py-3 align-middle text-center w-10 sm:w-44">
+                  ${(() => {
+                    const noteText = trackerNotes[key] || "";
+                    const hasNote = noteText.trim().length > 0;
+                    const cleanName = it.name.replace(/^(CHECKPOINT|FINAL CHECKPOINT):\s*/, "").replace(/['"]/g, " ");
+                    const cleanPhase = p.title.replace(/['"]/g, " ");
+                    if (hasNote) {
+                      const words = noteText.trim().split(/\s+/).length;
+                      const preview = noteText.trim().replace(/[#*`_\n]/g, " ").slice(0, 20);
+                      return `
+                        <button type="button" onclick="openNotesModal('${key}', '${cleanName}', '${cleanPhase}', event)"
+                          class="group w-7 h-7 sm:w-auto inline-flex items-center justify-center gap-1.5 p-0 sm:px-2.5 sm:py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-800 text-[11px] font-mono font-semibold transition-all shadow-2xs max-w-full cursor-pointer" title="View & Edit Notes">
+                          <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
+                          <span class="truncate max-w-[85px] text-left text-[10px] text-indigo-900 hidden sm:inline">${preview}</span>
+                          <span class="px-1 py-0.2 rounded bg-indigo-200/70 text-[9px] text-indigo-950 font-bold shrink-0 hidden sm:inline">${words}w</span>
+                        </button>
+                      `;
+                    } else {
+                      return `
+                        <button type="button" onclick="openNotesModal('${key}', '${cleanName}', '${cleanPhase}', event)"
+                          class="w-7 h-7 sm:w-auto inline-flex items-center justify-center p-0 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/60 text-slate-400 hover:text-indigo-600 text-[11px] font-mono transition-all shadow-2xs cursor-pointer group" title="Write notes for this topic">
+                          <i data-lucide="plus" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform"></i>
+                          <span class="text-[10px] font-medium hidden sm:inline ml-1">Add note</span>
+                        </button>
+                      `;
+                    }
+                  })()}
+                </td>
+
+                <!-- Custom Styled Dropdown UI (No Native Chrome Select) -->
+                <td class="px-2 sm:px-4 py-3 align-middle text-right whitespace-nowrap w-12 sm:w-64">
+                  <div class="relative inline-block text-left custom-dropdown-container" id="dropdown-container-${key}">
+                    <button type="button" onclick="toggleCustomMenu('${key}', event)" id="btn-${key}"
+                      class="custom-dropdown-btn w-7 h-7 sm:w-auto flex items-center justify-center sm:justify-between gap-1 sm:gap-2.5 p-0 sm:px-3 sm:py-1.5 rounded-lg border text-xs font-mono font-semibold transition-all shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${conf.btnClass}" title="${conf.label}">
+                      <span class="flex items-center gap-1.5 sm:gap-2">
+                        <span id="dot-${key}" class="w-2.5 h-2.5 rounded-full ${conf.dotColor} shrink-0"></span>
+                        <span id="label-${key}" class="hidden sm:inline">${conf.label}</span>
+                      </span>
+                      <i data-lucide="chevron-down" class="hidden sm:inline w-3.5 h-3.5 opacity-60"></i>
+                    </button>
+
+                    <!-- Floating Menu Card -->
+                    <div id="menu-${key}" class="custom-status-menu hidden absolute right-0 mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50 font-mono text-xs divide-y divide-gray-50">
+                      <button type="button" onclick="selectCustomStatus('${key}', 'NOT_LEARNED', event)" class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-rose-50/70 text-gray-700 hover:text-rose-700 transition-colors">
+                        <div class="flex items-center gap-2">
+                          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                          <span>Not learned</span>
+                        </div>
+                        <i data-lucide="check" id="check-${key}-NOT_LEARNED" class="menu-check w-3.5 h-3.5 text-rose-600 ${st === 'NOT_LEARNED' ? '' : 'hidden'}"></i>
+                      </button>
+                      <button type="button" onclick="selectCustomStatus('${key}', 'LEARNING', event)" class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-amber-50/70 text-gray-700 hover:text-amber-700 transition-colors">
+                        <div class="flex items-center gap-2">
+                          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                          <span>Learning / with help</span>
+                        </div>
+                        <i data-lucide="check" id="check-${key}-LEARNING" class="menu-check w-3.5 h-3.5 text-amber-600 ${st === 'LEARNING' ? '' : 'hidden'}"></i>
+                      </button>
+                      <button type="button" onclick="selectCustomStatus('${key}', 'MASTERED', event)" class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-emerald-50/70 text-gray-700 hover:text-emerald-700 transition-colors">
+                        <div class="flex items-center gap-2">
+                          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>Mastered</span>
+                        </div>
+                        <i data-lucide="check" id="check-${key}-MASTERED" class="menu-check w-3.5 h-3.5 text-emerald-600 ${st === 'MASTERED' ? '' : 'hidden'}"></i>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+
+          sectionsHtml += `
+            <div id="sec-wrap-${s.id}" class="p-4 sm:p-5 space-y-3">
+              <!-- Unit Subheader -->
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-mono font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> ${s.title}
+                </h4>
+                <span class="text-[11px] font-mono text-gray-400">${s.items.length} Skills</span>
+              </div>
+
+              <!-- Unit Table -->
+              <div class="overflow-visible border border-gray-200 rounded-xl">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-gray-50 font-mono uppercase text-[10px] text-gray-500 tracking-wider border-b border-gray-200">
+                    <tr>
+                      <th class="px-1 sm:px-3 py-2.5 text-center w-6 sm:w-12">#</th>
+                      <th class="pl-1 pr-2 sm:px-4 py-2.5">SKILL / CHECKPOINT</th>
+                      <th class="px-1.5 sm:px-3 py-2.5 w-10 sm:w-44 text-center"><span class="hidden sm:inline">NOTES</span><span class="sm:hidden" title="Notes"><i data-lucide="file-text" class="w-3.5 h-3.5 mx-auto"></i></span></th>
+                      <th class="px-2 sm:px-4 py-2.5 text-right w-12 sm:w-64"><span class="hidden sm:inline">STATUS</span></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 bg-white">
+                    ${rowsHtml}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        });
+
+        sectionsHtml += `</div>`;
+        card.innerHTML = headerHtml + sectionsHtml;
+        container.appendChild(card);
+      });
+
+      lucide.createIcons();
+      updateVisualDashboard();
+    }
+
+    function renderCode150Tables() {
+      const container = document.getElementById('code150-container');
+      if (!container) return;
+      container.innerHTML = "";
+
+      const cats = getCode150Categories();
+      cats.forEach((c, cIdx) => {
+        const card = document.createElement('div');
+        card.id = `card-code150-${c.id}`;
+        card.className = "bg-white border border-gray-200 rounded-2xl shadow-sm overflow-visible scroll-mt-20";
+
+        const headerHtml = `
+          <div onclick="toggleCode150Category('${c.id}')" class="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 gap-3 cursor-pointer hover:bg-gray-50/80 select-none bg-white transition-colors rounded-t-2xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 font-mono font-bold text-sm shrink-0 shadow-2xs">
+                #${cIdx+1}
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-gray-900 tracking-tight">${c.title}</h3>
+                <p class="text-xs text-gray-500 font-mono">${c.problems.length} Curated Problems • Official LeetCode Numbers</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 self-end md:self-center shrink-0">
+              <div class="text-right font-mono min-w-[140px]">
+                <div class="text-xs font-bold text-gray-900" id="cat-stat-${c.id}">0% Completed</div>
+                <div class="w-36 bg-gray-100 rounded-full h-1.5 mt-1 ml-auto overflow-hidden">
+                  <div id="cat-bar-${c.id}" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 transition-transform duration-200" id="chevron-code150-${c.id}">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </div>
+            </div>
+          </div>
+        `;
+
+        let rowsHtml = "";
+        c.problems.forEach(p => {
+          const st = code150State[p.id] || "NOT_COMPLETED";
+          const conf = CODE150_STATUS_MAP[st] || CODE150_STATUS_MAP.NOT_COMPLETED;
+          const isRevised = !!code150Revised[p.id];
+          const noteKey = `code150_${p.id}`;
+          const noteText = trackerNotes[noteKey] || "";
+          const hasNote = noteText.trim().length > 0;
+          const cleanName = p.name.replace(/['"]/g, " ");
+          const cleanCat = c.title.replace(/['"]/g, " ");
+
+          rowsHtml += `
+            <tr class="hover:bg-gray-50/70 transition-colors" id="row-code150-${p.id}">
+              <!-- LeetCode Problem Number Badge -->
+              <td class="px-1 sm:px-3 py-3 font-mono align-middle whitespace-nowrap text-xs text-center w-8 sm:w-14">
+                <span class="inline-block px-1.5 sm:px-2 py-0.5 rounded font-mono font-bold text-[10px] sm:text-[11px] bg-slate-100 text-slate-700 border border-slate-200">
+                  #${p.num}
+                </span>
+              </td>
+
+              <!-- Problem Title + Direct Link -->
+              <td class="pl-1 pr-2 sm:px-4 py-3 align-middle">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <a href="${p.url}" target="_blank" rel="noopener noreferrer" class="group inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 hover:text-indigo-600 transition-colors" title="Open on LeetCode (#${p.num})">
+                    <span>${p.name}</span>
+                    <i data-lucide="external-link" class="hidden sm:inline-block w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                  </a>
+                </div>
+              </td>
+
+              <!-- Notes Column -->
+              <td class="px-1.5 sm:px-3 py-3 align-middle text-center w-10 sm:w-40">
+                ${(() => {
+                  if (hasNote) {
+                    const words = noteText.trim().split(/\s+/).length;
+                    const preview = noteText.trim().replace(/[#*`_\n]/g, " ").slice(0, 18);
+                    return `
+                      <button type="button" onclick="openNotesModal('${noteKey}', '#${p.num} ${cleanName}', '${cleanCat}', event)"
+                        class="group w-7 h-7 sm:w-auto inline-flex items-center justify-center gap-1.5 p-0 sm:px-2.5 sm:py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-800 text-[11px] font-mono font-semibold transition-all shadow-2xs max-w-full cursor-pointer" title="View & Edit Notes">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
+                        <span class="truncate max-w-[75px] text-left text-[10px] text-indigo-900 hidden sm:inline">${preview}</span>
+                        <span class="px-1 py-0.2 rounded bg-indigo-200/70 text-[9px] text-indigo-950 font-bold shrink-0 hidden sm:inline">${words}w</span>
+                      </button>
+                    `;
+                  } else {
+                    return `
+                      <button type="button" onclick="openNotesModal('${noteKey}', '#${p.num} ${cleanName}', '${cleanCat}', event)"
+                        class="w-7 h-7 sm:w-auto inline-flex items-center justify-center p-0 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/60 text-slate-400 hover:text-indigo-600 text-[11px] font-mono transition-all shadow-2xs cursor-pointer group" title="Write solution notes / approach">
+                        <i data-lucide="plus" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-medium hidden sm:inline ml-1">Add note</span>
+                      </button>
+                    `;
+                  }
+                })()}
+              </td>
+
+              <!-- Revised Tick Box Column -->
+              <td class="px-1.5 sm:px-3 py-3 align-middle text-center w-10 sm:w-32">
+                <label class="revised-label-pill w-7 h-7 sm:w-auto inline-flex items-center justify-center sm:gap-1.5 p-0 sm:px-2.5 sm:py-1 sm:rounded-lg sm:border transition-all cursor-pointer select-none ${isRevised ? 'sm:bg-indigo-50 sm:border-indigo-200 sm:text-indigo-700 sm:font-bold sm:shadow-2xs' : 'sm:bg-slate-50 sm:border-slate-200 sm:text-slate-500 sm:hover:bg-slate-100/70'}" title="${isRevised ? 'Revised' : 'Mark as revised'}">
+                  <input type="checkbox" onchange="toggleProblemRevised('${p.id}', this.checked)" ${isRevised ? 'checked' : ''} class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-0 cursor-pointer">
+                  <span class="revised-text text-[10px] font-mono hidden sm:inline">${isRevised ? 'Revised' : 'Revise'}</span>
+                </label>
+              </td>
+
+              <!-- Custom Dropdown: Completed / Work more / Not completed -->
+              <td class="px-2 sm:px-4 py-3 align-middle text-right whitespace-nowrap w-12 sm:w-56">
+                <div class="relative inline-block text-left custom-dropdown-container" id="dropdown-container-${p.id}">
+                  <button type="button" onclick="toggleCustomMenu('${p.id}', event)" id="btn-${p.id}"
+                    class="custom-dropdown-btn w-7 h-7 sm:w-auto flex items-center justify-center sm:justify-between gap-1 sm:gap-2.5 p-0 sm:px-3 sm:py-1.5 rounded-lg border text-xs font-mono font-semibold transition-all shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${conf.btnClass}" title="${conf.label}">
+                    <span class="flex items-center gap-1.5 sm:gap-2">
+                      <span id="dot-${p.id}" class="w-2.5 h-2.5 rounded-full ${conf.dotColor} shrink-0"></span>
+                      <span id="label-${p.id}" class="hidden sm:inline">${conf.label}</span>
+                    </span>
+                    <i data-lucide="chevron-down" class="hidden sm:inline w-3.5 h-3.5 opacity-60"></i>
+                  </button>
+
+                  <!-- Floating Menu Card -->
+                  <div id="menu-${p.id}" class="custom-status-menu hidden absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50 font-mono text-xs divide-y divide-gray-50">
+                    <button type="button" onclick="selectCode150Status('${p.id}', 'COMPLETED', event)" class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-emerald-50/70 text-gray-700 hover:text-emerald-700 transition-colors">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Completed</span>
+                      </div>
+                      <i data-lucide="check" id="check-${p.id}-COMPLETED" class="menu-check w-3.5 h-3.5 text-emerald-600 ${st === 'COMPLETED' ? '' : 'hidden'}"></i>
+                    </button>
+                    <button type="button" onclick="selectCode150Status('${p.id}', 'WORK_MORE', event)" class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-amber-50/70 text-gray-700 hover:text-amber-700 transition-colors">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Work more</span>
+                      </div>
+                      <i data-lucide="check" id="check-${p.id}-WORK_MORE" class="menu-check w-3.5 h-3.5 text-amber-600 ${st === 'WORK_MORE' ? '' : 'hidden'}"></i>
+                    </button>
+                    <button type="button" onclick="selectCode150Status('${p.id}', 'NOT_COMPLETED', event)" class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-rose-50/70 text-gray-700 hover:text-rose-700 transition-colors">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span>Not completed</span>
+                      </div>
+                      <i data-lucide="check" id="check-${p.id}-NOT_COMPLETED" class="menu-check w-3.5 h-3.5 text-rose-600 ${st === 'NOT_COMPLETED' ? '' : 'hidden'}"></i>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        card.innerHTML = `
+          ${headerHtml}
+          <div id="wrap-code150-${c.id}" class="p-4 sm:p-5 overflow-visible">
+            <div class="overflow-visible border border-gray-200 rounded-xl">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-gray-50 font-mono uppercase text-[10px] text-gray-500 tracking-wider border-b border-gray-200">
+                  <tr>
+                    <th class="px-1 sm:px-3 py-2.5 text-center w-8 sm:w-14">#</th>
+                    <th class="pl-1 pr-2 sm:px-4 py-2.5">LEETCODE PROBLEM</th>
+                    <th class="px-1.5 sm:px-3 py-2.5 w-10 sm:w-40 text-center"><span class="hidden sm:inline">NOTES</span><span class="sm:hidden" title="Notes"><i data-lucide="file-text" class="w-3.5 h-3.5 mx-auto"></i></span></th>
+                    <th class="px-1.5 sm:px-3 py-2.5 text-center w-10 sm:w-32"><span class="hidden sm:inline">REVISED</span><span class="sm:hidden" title="Revised"><i data-lucide="check-square" class="w-3.5 h-3.5 mx-auto"></i></span></th>
+                    <th class="px-2 sm:px-4 py-2.5 text-right w-12 sm:w-56"><span class="hidden sm:inline">STATUS</span></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  ${rowsHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      lucide.createIcons();
+      updateVisualDashboard();
+    }
+
+    function exportData() {
+      const exportPayload = {
+        exportedAt: new Date().toISOString(),
+        activeTrackerMode: activeTrackerMode,
+        curriculumState: trackerState,
+        code150State: code150State,
+        code150Revised: code150Revised,
+        notes: trackerNotes
+      };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `sde_tracker_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast('success', 'Tracker progress exported successfully!');
+    }
+
+    // In-App Reset Modal Logic (No Chrome browser popup)
+    function openResetModal() {
+      const modal = document.getElementById('reset-modal');
+      const card = document.getElementById('reset-modal-card');
+      if (!modal || !card) return;
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-95');
+      lucide.createIcons();
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('reset-modal');
+      const card = document.getElementById('reset-modal-card');
+      if (!modal || !card) return;
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      card.classList.add('scale-95');
+    }
+
+    function openResetRevisionsModal() {
+      const modal = document.getElementById('reset-revisions-modal');
+      const card = document.getElementById('reset-revisions-modal-card');
+      if (!modal || !card) return;
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-95');
+      lucide.createIcons();
+    }
+
+    function closeResetRevisionsModal() {
+      const modal = document.getElementById('reset-revisions-modal');
+      const card = document.getElementById('reset-revisions-modal-card');
+      if (!modal || !card) return;
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      card.classList.add('scale-95');
+    }
+
+    function confirmResetRevisions() {
+      closeResetRevisionsModal();
+      code150Revised = {};
+      saveData();
+      renderCode150Tables();
+      showToast('warning', 'All problem revision tick boxes have been reset.');
+    }
+
+    function confirmResetAll() {
+      closeResetModal();
+      if (activeTrackerMode === 'code150') {
+        const cats = getCode150Categories();
+        cats.forEach(c => {
+          c.problems.forEach(p => {
+            code150State[p.id] = "NOT_COMPLETED";
+          });
+        });
+        saveData();
+        renderCode150Tables();
+        showToast('warning', 'All Code 150 problems reset to Not completed.');
+      } else {
+        CURRICULUM_PHASES.forEach(p => {
+          p.sections.forEach(s => {
+            s.items.forEach((it) => {
+              const key = generateKey(p.id, s.id, it);
+              trackerState[key] = "NOT_LEARNED";
+            });
+          });
+        });
+        saveData();
+        renderCurriculumTables();
+        showToast('warning', 'All curriculum skills reset to Not learned.');
+      }
+    }
+
+    // =========================================================================
+    // AUTH MODAL & PROFILE LOGIC (Supabase Integration)
+    // =========================================================================
+
+    function openAuthModal(tab = 'signin') {
+      switchAuthTab(tab);
+      const modal = document.getElementById('auth-modal');
+      const card = document.getElementById('auth-modal-card');
+      if (!modal || !card) return;
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        card.classList.remove('scale-95');
+      });
+      lucide.createIcons();
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      const card = document.getElementById('auth-modal-card');
+      if (!modal || !card) return;
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      card.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    function showAuthError(msg) {
+      const banner = document.getElementById('auth-inline-error');
+      const text = document.getElementById('auth-inline-error-text');
+      if (banner && text) {
+        text.textContent = msg;
+        banner.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+
+    function clearAuthError() {
+      const banner = document.getElementById('auth-inline-error');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      clearAuthError();
+      const tabSigninBtn = document.getElementById('auth-tab-signin-btn');
+      const tabSignupBtn = document.getElementById('auth-tab-signup-btn');
+      const viewSignin = document.getElementById('auth-view-signin');
+      const viewSignup = document.getElementById('auth-view-signup');
+      if (!tabSigninBtn || !tabSignupBtn || !viewSignin || !viewSignup) return;
+
+      if (tab === 'signup') {
+        tabSignupBtn.className = "flex-1 py-3 text-xs font-mono font-bold text-center border-b-2 border-indigo-600 text-indigo-600 bg-white transition-all cursor-pointer";
+        tabSigninBtn.className = "flex-1 py-3 text-xs font-mono font-bold text-center border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition-all cursor-pointer";
+        viewSignup.classList.remove('hidden');
+        viewSignin.classList.add('hidden');
+      } else {
+        tabSigninBtn.className = "flex-1 py-3 text-xs font-mono font-bold text-center border-b-2 border-indigo-600 text-indigo-600 bg-white transition-all cursor-pointer";
+        tabSignupBtn.className = "flex-1 py-3 text-xs font-mono font-bold text-center border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition-all cursor-pointer";
+        viewSignin.classList.remove('hidden');
+        viewSignup.classList.add('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    function openProfileModal() {
+      if (!currentUser) {
+        openAuthModal('signin');
+        return;
+      }
+      populateProfileModal(currentUser);
+      const modal = document.getElementById('profile-modal');
+      const card = document.getElementById('profile-modal-card');
+      if (!modal || !card) return;
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-95');
+      lucide.createIcons();
+    }
+
+    function closeProfileModal() {
+      const modal = document.getElementById('profile-modal');
+      const card = document.getElementById('profile-modal-card');
+      if (!modal || !card) return;
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      card.classList.add('scale-95');
+    }
+
+    function formatAuthEmail(input) {
+      const trimmed = (input || '').trim();
+      if (trimmed.includes('@')) {
+        return trimmed;
+      }
+      const cleanUser = trimmed.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+      return `${cleanUser}@tracker.app`;
+    }
+
+    async function submitSignIn() {
+      clearAuthError();
+      const identifier = document.getElementById('signin-identifier').value.trim();
+      const password = document.getElementById('signin-password').value;
+      const btn = document.getElementById('btn-submit-signin');
+
+      if (!identifier || !password) {
+        showAuthError('Please enter username and password.');
+        showToast('error', 'Please enter username and password.');
+        return;
+      }
+
+      if (!supabaseClient) {
+        showAuthError('Supabase client not loaded. Check your internet connection.');
+        showToast('error', 'Supabase client not loaded.');
+        return;
+      }
+
+      const email = formatAuthEmail(identifier);
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-0.5 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Signing in...`;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) {
+          if (error.message && error.message.includes('Email not confirmed')) {
+            showAuthError('Email unconfirmed. In Supabase Dashboard > Auth > Providers > Email, toggle OFF "Confirm email".');
+            showToast('error', 'Email confirmation required in Supabase settings.');
+          } else if (error.message && error.message.includes('Invalid login credentials')) {
+            showAuthError('Invalid username or password.');
+            showToast('error', 'Invalid username or password.');
+          } else {
+            showAuthError(error.message || 'Login failed.');
+            showToast('error', error.message || 'Login failed.');
+          }
+          return;
+        }
+
+        currentUser = data.user;
+        updateUserHeaderUI(currentUser);
+        closeAuthModal();
+        showToast('success', `Welcome back, @${currentUser.user_metadata?.username || 'user'}!`);
+        syncCloudTrackerState(currentUser);
+      } catch (err) {
+        showAuthError(err.message || 'Sign in error');
+        showToast('error', err.message || 'Sign in error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> Sign In`;
+        lucide.createIcons();
+      }
+    }
+
+    async function submitSignUp() {
+      clearAuthError();
+      const name = document.getElementById('signup-name').value.trim();
+      const rawUser = document.getElementById('signup-username').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const btn = document.getElementById('btn-submit-signup');
+
+      const cleanUser = rawUser.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+
+      if (!cleanUser) {
+        showAuthError('Please enter a valid username (letters, numbers, underscores).');
+        showToast('error', 'Please enter a valid username.');
+        return;
+      }
+      if (!name) {
+        showAuthError('Please enter your display name.');
+        showToast('error', 'Please enter your name.');
+        return;
+      }
+      if (!password || password.length < 6) {
+        showAuthError('Password must be at least 6 characters long.');
+        showToast('error', 'Password must be at least 6 characters.');
+        return;
+      }
+
+      if (!supabaseClient) {
+        showAuthError('Supabase connection not ready.');
+        showToast('error', 'Supabase client not loaded.');
+        return;
+      }
+
+      const authEmail = `${cleanUser}@tracker.app`;
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-0.5 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Checking username & creating...`;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: authEmail,
+          password: password,
+          options: {
+            data: {
+              name: name,
+              username: cleanUser,
+              tracker_state: trackerState
+            }
+          }
+        });
+
+        // 1. Check if Supabase rejected because username already exists
+        if (error) {
+          if (error.message && (error.message.includes('already registered') || error.message.includes('User already registered') || error.status === 422)) {
+            showAuthError(`Username "@${cleanUser}" is already taken. Please choose another.`);
+            showToast('error', `Username "@${cleanUser}" is already taken.`);
+          } else if (error.message && error.message.includes('rate limit')) {
+            showAuthError('Email rate limit reached. In Supabase Dashboard, disable "Confirm email" under Auth > Providers > Email.');
+            showToast('error', 'Email rate limit reached.');
+          } else {
+            showAuthError(error.message || 'Registration failed.');
+            showToast('error', error.message || 'Sign up failed.');
+          }
+          return;
+        }
+
+        // 2. Check if identities array is empty (Supabase's standard indicator for duplicate registration)
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          showAuthError(`Username "@${cleanUser}" already exists. Please choose a different username or sign in.`);
+          showToast('error', `Username "@${cleanUser}" is already taken.`);
+          return;
+        }
+
+        if (data.session) {
+          currentUser = data.user;
+          updateUserHeaderUI(currentUser);
+          closeAuthModal();
+          showToast('success', `Account created! Welcome, @${cleanUser}`);
+        } else if (data.user) {
+          showToast('info', `Account registered! If "Confirm email" is on in Supabase, toggle it off to sign in immediately.`);
+          switchAuthTab('signin');
+          const idInput = document.getElementById('signin-identifier');
+          if (idInput) idInput.value = cleanUser;
+        }
+      } catch (err) {
+        showAuthError(err.message || 'Signup error');
+        showToast('error', err.message || 'Signup error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="user-plus" class="w-4 h-4"></i> Create Account`;
+        lucide.createIcons();
+      }
+    }
+
+    async function updateProfileName() {
+      if (!supabaseClient || !currentUser) {
+        showToast('error', 'Please sign in first.');
+        return;
+      }
+      const newName = document.getElementById('profile-name-input').value.trim();
+      if (!newName) {
+        showToast('error', 'Name cannot be empty.');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient.auth.updateUser({
+          data: { name: newName }
+        });
+
+        if (error) {
+          showToast('error', error.message);
+          return;
+        }
+
+        currentUser = data.user;
+        updateUserHeaderUI(currentUser);
+        populateProfileModal(currentUser);
+        showToast('success', 'Name updated successfully!');
+      } catch (e) {
+        showToast('error', e.message);
+      }
+    }
+
+    async function updateUserPassword() {
+      if (!supabaseClient || !currentUser) {
+        showToast('error', 'Please sign in first.');
+        return;
+      }
+      const newPass = document.getElementById('profile-new-password').value;
+      const confirmPass = document.getElementById('profile-confirm-password').value;
+
+      if (!newPass || newPass.length < 6) {
+        showToast('error', 'Password must be at least 6 characters.');
+        return;
+      }
+      if (newPass !== confirmPass) {
+        showToast('error', 'Passwords do not match.');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient.auth.updateUser({
+          password: newPass
+        });
+
+        if (error) {
+          showToast('error', error.message);
+          return;
+        }
+
+        document.getElementById('profile-new-password').value = '';
+        document.getElementById('profile-confirm-password').value = '';
+        showToast('success', 'Password updated successfully!');
+      } catch (e) {
+        showToast('error', e.message);
+      }
+    }
+
+    async function handleLogOut() {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      currentUser = null;
+      updateUserHeaderUI(null);
+      closeProfileModal();
+      showToast('info', 'Logged out.');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 300);
+    }
+
+    function populateProfileModal(user) {
+      if (!user) return;
+      const meta = user.user_metadata || {};
+      const username = meta.username || user.email?.split('@')[0] || 'user';
+      const name = meta.name || username;
+      const initial = (name[0] || username[0] || 'U').toUpperCase();
+
+      const mAvatar = document.getElementById('modal-profile-avatar');
+      const mName = document.getElementById('modal-profile-name');
+      const mUser = document.getElementById('modal-profile-username');
+      const inputName = document.getElementById('profile-name-input');
+      const inputUser = document.getElementById('profile-username-input');
+
+      if (mAvatar) mAvatar.textContent = initial;
+      if (mName) mName.textContent = name;
+      if (mUser) mUser.textContent = `@${username}`;
+      if (inputName) inputName.value = name;
+      if (inputUser) inputUser.value = username;
+    }
+
+    function updateUserHeaderUI(user) {
+      const btnAuth = document.getElementById('btn-open-auth');
+      const btnProfile = document.getElementById('btn-open-profile');
+      const displayEl = document.getElementById('header-username-display');
+      const avatarEl = document.getElementById('header-avatar-circle');
+
+      if (user) {
+        const meta = user.user_metadata || {};
+        const username = meta.username || user.email?.split('@')[0] || 'user';
+        const name = meta.name || username;
+        const initial = (name[0] || username[0] || 'U').toUpperCase();
+
+        if (btnAuth) btnAuth.classList.add('hidden');
+        if (btnProfile) btnProfile.classList.remove('hidden');
+        if (displayEl) displayEl.textContent = `@${username}`;
+        if (avatarEl) avatarEl.textContent = initial;
+      } else {
+        if (btnAuth) btnAuth.classList.remove('hidden');
+        if (btnProfile) btnProfile.classList.add('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    function syncCloudTrackerState(user) {
+      if (!user) return;
+      const cloudState = user.user_metadata?.tracker_state;
+      if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length > 0) {
+        trackerState = { ...trackerState, ...cloudState };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(trackerState));
+      }
+      const cloudNotes = user.user_metadata?.tracker_notes;
+      if (cloudNotes && typeof cloudNotes === "object") {
+        trackerNotes = { ...trackerNotes, ...cloudNotes };
+        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(trackerNotes));
+      }
+      const cloudCode150State = user.user_metadata?.code150_state;
+      if (cloudCode150State && typeof cloudCode150State === 'object') {
+        code150State = { ...code150State, ...cloudCode150State };
+        localStorage.setItem(CODE150_STORAGE_KEY, JSON.stringify(code150State));
+      }
+      const cloudCode150Revised = user.user_metadata?.code150_revised;
+      if (cloudCode150Revised && typeof cloudCode150Revised === 'object') {
+        code150Revised = { ...code150Revised, ...cloudCode150Revised };
+        localStorage.setItem(CODE150_REVISED_KEY, JSON.stringify(code150Revised));
+      }
+
+      if (activeTrackerMode === 'curriculum') {
+        renderCurriculumTables();
+      } else {
+        renderCode150Tables();
+      }
+      updateVisualDashboard();
+    }
+
+    async function syncTrackerToCloud(showNotification = false) {
+      if (!currentUser || !supabaseClient) {
+        if (showNotification) showToast('info', 'Sign in to sync your progress to cloud.');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient.auth.updateUser({
+          data: { 
+            tracker_state: trackerState,
+            tracker_notes: trackerNotes,
+            code150_state: code150State,
+            code150_revised: code150Revised
+          }
+        });
+        if (!error && data.user) {
+          currentUser = data.user;
+          const statusEl = document.getElementById('profile-sync-status');
+          if (statusEl) {
+            statusEl.textContent = `Synced: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+          }
+          if (showNotification) {
+            showToast('success', 'Progress synced to Supabase!');
+          }
+        }
+      } catch (err) {
+        console.error('Cloud sync failed:', err);
+      }
+    }
+
+    function triggerDebouncedCloudSync() {
+      if (!currentUser || !supabaseClient) return;
+      if (cloudSyncDebounce) clearTimeout(cloudSyncDebounce);
+      cloudSyncDebounce = setTimeout(() => {
+        syncTrackerToCloud(false);
+      }, 1200);
+    }
+
+    // Modal background click closing
+    document.addEventListener('click', (e) => {
+      const resetModal = document.getElementById('reset-modal');
+      const resetRevisionsModal = document.getElementById('reset-revisions-modal');
+      const authModal = document.getElementById('auth-modal');
+      const profileModal = document.getElementById('profile-modal');
+      const notesModal = document.getElementById('notes-modal');
+      if (notesModal && e.target === notesModal) closeNotesModal();
+      if (resetModal && e.target === resetModal) closeResetModal();
+      if (resetRevisionsModal && e.target === resetRevisionsModal) closeResetRevisionsModal();
+      if (authModal && e.target === authModal) closeAuthModal();
+      if (profileModal && e.target === profileModal) closeProfileModal();
+    });
+
+    // Keyboard navigation (Escape key)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAllCustomMenus();
+        closeResetModal();
+        closeResetRevisionsModal();
+        closeAuthModal();
+        closeProfileModal();
+        closeNotesModal();
+      }
+    });
+
+
+    // =========================================================================
+    // BIG SCREEN STUDY NOTES LOGIC (Markdown, Auto-Save, Cloud Sync)
+    // =========================================================================
+
+    function openNotesModal(key, topicName, phaseTitle, e) {
+      if (e) e.stopPropagation();
+      currentNotesKey = key;
+
+      const modal = document.getElementById("notes-modal");
+      const card = document.getElementById("notes-modal-card");
+      const textarea = document.getElementById("notes-textarea");
+      const phaseBadge = document.getElementById("notes-phase-badge");
+      const topicEl = document.getElementById("notes-topic-title");
+
+      if (phaseBadge) phaseBadge.textContent = phaseTitle || "CURRICULUM";
+      if (topicEl) topicEl.textContent = topicName || "Study Notes";
+
+      const currentNote = trackerNotes[key] || "";
+      if (textarea) {
+        textarea.value = currentNote;
+      }
+
+      updateNotesWordCount(currentNote);
+      renderNotesPreview(currentNote);
+
+      if (modal && card) {
+        modal.classList.remove("hidden");
+        requestAnimationFrame(() => {
+          modal.classList.remove("opacity-0", "pointer-events-none");
+          card.classList.remove("scale-95");
+        });
+      }
+
+      setNotesSaveStatus(true);
+      setNotesViewMode(window.innerWidth >= 1024 ? "split" : "write");
+
+      lucide.createIcons();
+      setTimeout(() => {
+        if (textarea) textarea.focus();
+      }, 100);
+    }
+
+    function closeNotesModal() {
+      // Flush any pending save
+      if (notesSaveTimeout) {
+        clearTimeout(notesSaveTimeout);
+        notesSaveTimeout = null;
+      }
+      const textarea = document.getElementById("notes-textarea");
+      if (textarea && currentNotesKey) {
+        trackerNotes[currentNotesKey] = textarea.value;
+        saveNotesOnly();
+      }
+
+      const modal = document.getElementById("notes-modal");
+      const card = document.getElementById("notes-modal-card");
+      if (!modal || !card) return;
+
+      modal.classList.add("opacity-0", "pointer-events-none");
+      card.classList.add("scale-95");
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        // Exit fullscreen if active
+        if (isNotesFullscreen) toggleNotesFullscreen();
+        currentNotesKey = null;
+        renderCurriculumTables();
+      }, 250);
+    }
+
+    function handleNotesInput() {
+      const textarea = document.getElementById("notes-textarea");
+      if (!textarea || !currentNotesKey) return;
+      const text = textarea.value;
+      trackerNotes[currentNotesKey] = text;
+
+      updateNotesWordCount(text);
+      if (notesViewMode === "split" || notesViewMode === "preview") {
+        renderNotesPreview(text);
+      }
+
+      setNotesSaveStatus(false);
+      if (notesSaveTimeout) clearTimeout(notesSaveTimeout);
+      notesSaveTimeout = setTimeout(() => {
+        saveNotesOnly();
+        setNotesSaveStatus(true);
+      }, 500);
+    }
+
+    function setNotesSaveStatus(saved) {
+      const el = document.getElementById("notes-save-status");
+      if (!el) return;
+      if (saved) {
+        el.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> <span>Saved</span>`;
+        el.className = "text-[11px] font-mono text-emerald-600 flex items-center gap-1";
+      } else {
+        el.innerHTML = `<svg class="animate-spin h-3 w-3 text-amber-500 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> <span>Saving...</span>`;
+        el.className = "text-[11px] font-mono text-amber-600 flex items-center gap-1";
+      }
+      lucide.createIcons();
+    }
+
+    function updateNotesWordCount(text) {
+      const trimmed = (text || "").trim();
+      const words = trimmed.length > 0 ? trimmed.split(/\s+/).length : 0;
+      const chars = (text || "").length;
+
+      const wordsEl = document.getElementById("notes-stat-words");
+      const charsEl = document.getElementById("notes-stat-chars");
+      if (wordsEl) wordsEl.textContent = `${words} words`;
+      if (charsEl) charsEl.textContent = `${chars} chars`;
+    }
+
+    function renderNotesPreview(text) {
+      const previewEl = document.getElementById("notes-preview-content");
+      if (!previewEl) return;
+      const raw = text || "";
+      if (!raw.trim()) {
+        previewEl.innerHTML = `<p class="text-slate-400 italic font-mono text-xs">Nothing written yet. Write in markdown on the left to see live preview here.</p>`;
+        return;
+      }
+      try {
+        if (window.marked) {
+          previewEl.innerHTML = window.marked.parse(raw);
+        } else {
+          // Simple fallback if marked is still loading
+          previewEl.innerHTML = `<pre class="font-mono text-xs text-slate-800 whitespace-pre-wrap">${raw.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
+        }
+      } catch (err) {
+        previewEl.textContent = raw;
+      }
+    }
+
+    function setNotesViewMode(mode) {
+      notesViewMode = mode;
+      const editorPane = document.getElementById("notes-editor-pane");
+      const previewPane = document.getElementById("notes-preview-pane");
+      const toolbar = document.getElementById("notes-toolbar");
+
+      const tabWrite = document.getElementById("notes-tab-write");
+      const tabSplit = document.getElementById("notes-tab-split");
+      const tabPreview = document.getElementById("notes-tab-preview");
+
+      [tabWrite, tabSplit, tabPreview].forEach(tab => {
+        if (tab) {
+          tab.className = "px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all";
+        }
+      });
+
+      const textarea = document.getElementById("notes-textarea");
+      const currentText = textarea ? textarea.value : "";
+
+      if (mode === "write") {
+        if (tabWrite) tabWrite.className = "px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-indigo-700 shadow-2xs transition-all";
+        if (editorPane) {
+          editorPane.classList.remove("hidden");
+          editorPane.style.width = "100%";
+        }
+        if (previewPane) previewPane.classList.add("hidden");
+        if (toolbar) toolbar.classList.remove("hidden");
+      } else if (mode === "split") {
+        if (tabSplit) tabSplit.className = "px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-indigo-700 shadow-2xs transition-all";
+        if (editorPane) {
+          editorPane.classList.remove("hidden");
+          editorPane.style.width = "50%";
+        }
+        if (previewPane) {
+          previewPane.classList.remove("hidden");
+          previewPane.style.width = "50%";
+          renderNotesPreview(currentText);
+        }
+        if (toolbar) toolbar.classList.remove("hidden");
+      } else if (mode === "preview") {
+        if (tabPreview) tabPreview.className = "px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-indigo-700 shadow-2xs transition-all";
+        if (editorPane) editorPane.classList.add("hidden");
+        if (previewPane) {
+          previewPane.classList.remove("hidden");
+          previewPane.style.width = "100%";
+          renderNotesPreview(currentText);
+        }
+        if (toolbar) toolbar.classList.add("hidden");
+      }
+    }
+
+    function toggleNotesFullscreen() {
+      const card = document.getElementById("notes-modal-card");
+      const icon = document.getElementById("icon-notes-fullscreen");
+      if (!card) return;
+
+      isNotesFullscreen = !isNotesFullscreen;
+      if (isNotesFullscreen) {
+        card.classList.remove("max-w-5xl", "h-[88vh]");
+        card.classList.add("max-w-none", "w-[98vw]", "h-[96vh]");
+        if (icon) icon.setAttribute("data-lucide", "minimize-2");
+      } else {
+        card.classList.remove("max-w-none", "w-[98vw]", "h-[96vh]");
+        card.classList.add("max-w-5xl", "h-[88vh]");
+        if (icon) icon.setAttribute("data-lucide", "maximize-2");
+      }
+      lucide.createIcons();
+    }
+
+    function insertMarkdownSnippet(type) {
+      const textarea = document.getElementById("notes-textarea");
+      if (!textarea) return;
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = textarea.value.substring(start, end);
+      let snippet = "";
+      let cursorOffset = 0;
+
+      switch (type) {
+        case "h2":
+          snippet = `\n## ${selected || "Heading 2"}\n`;
+          break;
+        case "h3":
+          snippet = `\n### ${selected || "Heading 3"}\n`;
+          break;
+        case "bold":
+          snippet = `**${selected || "bold text"}**`;
+          cursorOffset = selected ? snippet.length : 2;
+          break;
+        case "italic":
+          snippet = `*${selected || "italic text"}*`;
+          cursorOffset = selected ? snippet.length : 1;
+          break;
+        case "code-inline":
+          snippet = `\`${selected || "code"}\``;
+          break;
+        case "code-block":
+          snippet = `\n\`\`\`python\n${selected || "# Python code example\ndef solution():\n    return True"}\n\`\`\`\n`;
+          break;
+        case "list":
+          snippet = `\n- ${selected || "List item 1"}\n- List item 2\n`;
+          break;
+        case "task":
+          snippet = `\n- [ ] ${selected || "Key requirement"}\n- [x] Completed item\n`;
+          break;
+        case "quote":
+          snippet = `\n> ${selected || "Important concept / interview gotcha"}\n`;
+          break;
+        case "template":
+          snippet = `\n### Key Concepts\n- \n\n### Code Example\n\`\`\`python\n# Example implementation\n\`\`\`\n\n### Interview Questions & Edge Cases\n- [ ] Question: \n`;
+          break;
+      }
+
+      textarea.setRangeText(snippet, start, end, "end");
+      textarea.focus();
+      handleNotesInput();
+    }
+
+    function copyNotesToClipboard() {
+      const textarea = document.getElementById("notes-textarea");
+      if (!textarea || !textarea.value.trim()) {
+        showToast("info", "Note is currently empty.");
+        return;
+      }
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        showToast("success", "Notes copied to clipboard!");
+      }).catch(() => {
+        showToast("error", "Unable to copy to clipboard.");
+      });
+    }
+
+    function clearCurrentNote() {
+      if (!currentNotesKey) return;
+      if (!confirm("Are you sure you want to clear the notes for this topic?")) return;
+      const textarea = document.getElementById("notes-textarea");
+      if (textarea) textarea.value = "";
+      trackerNotes[currentNotesKey] = "";
+      saveNotesOnly();
+      updateNotesWordCount("");
+      renderNotesPreview("");
+      showToast("info", "Notes cleared.");
+    }
+
+    async function initAuth() {
+      if (window.location.hash === '#/login') {
+        window.location.href = '/login';
+        return;
+      }
+      if (!supabaseClient) return;
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user) {
+          currentUser = session.user;
+          updateUserHeaderUI(currentUser);
+          syncCloudTrackerState(currentUser);
+        }
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+          if (session && session.user) {
+            currentUser = session.user;
+            updateUserHeaderUI(currentUser);
+          } else {
+            currentUser = null;
+            updateUserHeaderUI(null);
+          }
+        });
+      } catch (e) {
+        console.error("Auth initialization error:", e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+
+      let initialMode = 'curriculum';
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewParam = urlParams.get('view') || urlParams.get('tab');
+        const hash = window.location.hash;
+        const saved = viewParam || (hash && hash.includes('code150') ? 'code150' : null) || localStorage.getItem('sde_active_tracker_mode');
+        if (saved === 'code150') {
+          initialMode = 'code150';
+        }
+      } catch (e) {}
+
+      initAuth();
+      switchTrackerMode(initialMode);
+
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>
