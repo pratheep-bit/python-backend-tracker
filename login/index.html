@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In &bull; Python Backend Tracker</title>
+  
+  <!-- Python Snake SDE Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' fill='none'%3E%3Cpath d='M63.5 8C43.8 8 36.3 16.5 36.3 26.6v11.7h27.7v3.9H25.4C14.7 42.2 6 50.8 6 64.5c0 14.8 9.3 22.8 22.1 22.8h7.9V75.6c0-10.4 8.7-19.4 19.4-19.4h27.4c8.8 0 16-7.3 16-16.1V24.5C98.8 14.2 88.5 8 63.5 8zm-12.7 8.3a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4z' fill='%234F46E5'/%3E%3Cpath d='M64.5 120c19.7 0 27.2-8.5 27.2-18.6V89.7H64v-3.9h38.6c10.7 0 19.4-8.6 19.4-22.3 0-14.8-9.3-22.8-22.1-22.8h-7.9v11.7c0 10.4-8.7 19.4-19.4 19.4H45.2c-8.8 0-16 7.3-16 16.1v15.6c0 10.3 10.3 16.5 35.3 16.5zm12.7-8.3a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z' fill='%2310B981'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            accent: '#4F46E5'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background-color: #F8FAFC;
+      color: #0F172A;
+    }
+
+    /* Clean White SaaS Background Pattern */
+    .saas-light-pattern {
+      background-color: #F8FAFC;
+      background-image:
+        linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(99, 102, 241, 0.09), transparent 70%),
+        radial-gradient(ellipse 50% 35% at 90% 90%, rgba(16, 185, 129, 0.05), transparent 60%);
+      background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%;
+    }
+
+    /* Elevated White Card */
+    .white-saas-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.6);
+    }
+  </style>
+</head>
+<body class="saas-light-pattern min-h-screen flex flex-col justify-between p-4 sm:p-6 antialiased text-slate-900 selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- COMPLETE BACKEND ARCHITECTURE & PYTHON CODE RICH BACKGROUND CANVAS        -->
+  <!-- Rotated -9deg, scale 1.35, 6 dense columns: NO empty space on any screen   -->
+  <!-- ========================================================================= -->
+  <div class="fixed -inset-[20%] pointer-events-none select-none overflow-hidden z-0 flex items-center justify-center opacity-80 filter blur-[1px]">
+    
+    <div class="w-[140vw] min-w-[1400px] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-3.5 p-4" style="transform: rotate(-9deg); transform-origin: center center;">
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 1: API Gateway, Ingress, DNS & Metrics                         -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="network" class="w-3.5 h-3.5 text-indigo-500"></i> INGRESS &amp; ROUTING
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
+            <span class="font-bold text-indigo-700 flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3 h-3 text-indigo-600"></i> CLOUDFLARE EDGE
+            </span>
+            <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">200 OK &bull; 2.4ms</span>
+          </div>
+          <div class="text-[9px] sm:text-[10px] font-mono text-slate-500 bg-slate-50/80 p-1.5 rounded-lg border border-slate-100 flex items-center justify-between">
+            <span>RateLimiter: 500 req/min</span>
+            <span class="text-indigo-600 font-semibold">HTTP/3 &bull; TLS 1.3</span>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1 text-[9px] sm:text-[10px] font-mono">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1"><i data-lucide="split" class="w-3 h-3 text-indigo-500"></i> ENVOY PROXY</span>
+            <span class="text-emerald-600 text-[8px]">healthy</span>
+          </div>
+          <div class="text-slate-500">upstream: fast_api_cluster</div>
+          <div class="text-[8px] sm:text-[9px] text-indigo-700">mTLS verified &bull; circuit_breaker: OFF</div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1 font-mono text-[9px] sm:text-[10px]">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-amber-500"></i> PROMETHEUS</span>
+            <span class="text-[8px] text-slate-400">99.98% uptime</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[8px] sm:text-[9px]">
+            <div class="p-1 rounded bg-slate-50 border border-slate-100 text-slate-700">1.42M req/day</div>
+            <div class="p-1 rounded bg-emerald-50 border border-emerald-100 text-emerald-800 font-semibold">p95: 4.2ms</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-teal-600"></i> Kafka Stream</span>
+            <span class="text-[8px] text-teal-700 bg-teal-50 px-1 rounded">ack=all</span>
+          </div>
+          <div class="text-slate-500">topic: user.curriculum.progress</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-100/90 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="flex items-center gap-1 font-semibold text-slate-700">
+            <i data-lucide="box" class="w-3 h-3 text-indigo-500"></i> docker-compose
+          </span>
+          <span class="text-emerald-700 font-bold text-[8px] bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">5/5 up</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3 text-indigo-600"></i> Let's Encrypt</span>
+          <span class="text-emerald-600">auto-renew: valid 88d</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="shuffle" class="w-3 h-3 text-sky-600"></i> NGINX UPSTREAM</span>
+            <span class="text-[8px] text-sky-700 bg-sky-50 px-1 rounded">unix_sock</span>
+          </div>
+          <div class="text-[8px] text-slate-500">proxy_pass http://unix:/run/uvicorn.sock;</div>
+          <div class="text-[8px] text-indigo-600 font-medium">keepalive 64; proxy_http_version 1.1;</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3 text-indigo-600"></i> AWS Route 53</span>
+          <span class="text-slate-500">latency: 12ms</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-indigo-600"></i> WAF Security</span>
+            <span class="text-[8px] text-emerald-700 bg-emerald-50 px-1 rounded">OWASP CRS</span>
+          </div>
+          <div class="text-slate-500">SQLi &bull; XSS &bull; CSRF Filter: PASS</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="flex items-center gap-1 text-slate-700"><i data-lucide="cpu" class="w-3 h-3 text-violet-600"></i> HAProxy Node</span>
+          <span class="text-emerald-600 font-bold text-[8px]">balance: roundrobin</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-rose-500"></i> Datadog APM</span>
+          <span class="text-slate-500 text-[8px]">trace_id: 8f92a1</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 2: FastAPI ASGI Cluster, Pydantic & Alembic                    -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-500"></i> FASTAPI RUNTIME
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
+            <span class="font-bold text-slate-900 flex items-center gap-1">
+              <i data-lucide="server" class="w-3 h-3 text-indigo-600"></i> FASTAPI ASGI
+            </span>
+            <span class="text-[9px] text-slate-400 font-mono">uvloop</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[8px] sm:text-[9px] font-mono">
+            <div class="p-1 rounded bg-indigo-50/60 border border-indigo-100 text-indigo-900">12k rps</div>
+            <div class="p-1 rounded bg-emerald-50/60 border border-emerald-100 text-emerald-900">p99 &lt; 5ms</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-700 space-y-0.5">
+          <div class="flex items-center justify-between pb-1 mb-1 border-b border-slate-100 text-[9px]">
+            <span class="text-slate-500 font-semibold">schemas/mastery.py</span>
+            <span class="text-emerald-700 font-semibold">Pydantic v2</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">class</span> <span class="text-teal-700 font-bold">MasteryRecord</span>(<span class="text-slate-600">BaseModel</span>):</div>
+          <div class="pl-2">user_id: <span class="text-teal-700">UUID4</span></div>
+          <div class="pl-2">status: <span class="text-teal-700">Literal</span>[<span class="text-amber-700">"MASTERED"</span>]</div>
+          <div class="pl-2">synced_at: <span class="text-teal-700">datetime</span> = Field(default=utcnow)</div>
+          <div class="pl-2 text-slate-400">model_config = ConfigDict(frozen=<span class="text-indigo-600 font-bold">True</span>)</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold border-b border-slate-100 pb-1">
+            <span class="flex items-center gap-1 text-indigo-600"><i data-lucide="git-commit" class="w-3 h-3"></i> alembic</span>
+            <span class="text-slate-400 text-[8px]">9f8b1c2d.py</span>
+          </div>
+          <div class="text-[8px] sm:text-[9px] text-slate-600 space-y-0.5">
+            <div><span class="text-indigo-600 font-bold">def</span> upgrade():</div>
+            <div class="pl-2">op.create_table(<span class="text-amber-700">'roadmap_progress'</span>, ...)</div>
+            <div class="pl-2">op.create_index(<span class="text-amber-700">'ix_user_unit'</span>, ...)</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5 leading-tight">
+          <div class="flex items-center justify-between text-slate-400 text-[8px] pb-1 border-b border-slate-100">
+            <span>tests/test_sync.py</span>
+            <span class="text-emerald-600 font-semibold">pytest-asyncio</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">@pytest.mark</span>.<span class="text-emerald-600">asyncio</span></div>
+          <div><span class="text-indigo-600 font-bold">async def</span> <span class="text-blue-700">test_sync</span>(client: <span class="text-teal-700">AsyncClient</span>):</div>
+          <div class="pl-2">res = <span class="text-indigo-600 font-bold">await</span> client.get(<span class="text-amber-700">"/api/v1/sync"</span>)</div>
+          <div class="pl-2"><span class="text-indigo-600 font-bold">assert</span> res.status_code == 200</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-indigo-700 font-semibold">typing.Protocol</span>
+          <span>RuntimeCheckable</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-indigo-500"></i> Middleware</span>
+            <span class="text-slate-400 text-[8px]">BaseHTTPMiddleware</span>
+          </div>
+          <div class="text-[8px] text-slate-500">request.state.trace_id = uuid4()</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i> FieldValidator</span>
+          <span class="text-slate-500 text-[8px]">mode='after'</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> ANYIO TASKGROUP</span>
+            <span class="text-[8px] text-emerald-600">concurrency: 64</span>
+          </div>
+          <div class="text-[8px] text-slate-500">async with anyio.create_task_group() as tg:</div>
+          <div class="text-[8px] text-indigo-600 font-medium pl-2">tg.start_soon(sync_wal_records)</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="server" class="w-3 h-3 text-indigo-500"></i> Granian ASGI</span>
+          <span class="text-emerald-700 font-bold text-[8px]">workers: 4 &bull; threads: 2</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Pytest Coverage</span>
+          <span class="text-emerald-700 font-bold text-[8px]">98.4% (412 tests)</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 3: Database & Cache Tier                                       -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="database" class="w-3.5 h-3.5 text-indigo-500"></i> DATA TIER
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono font-bold text-slate-900">
+            <span class="flex items-center gap-1"><i data-lucide="database" class="w-3 h-3 text-indigo-600"></i> DUAL DB ENGINE</span>
+            <span class="text-[9px] text-emerald-600">HEALTHY</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-[8px] sm:text-[9px] font-mono">
+            <div class="p-1.5 rounded-lg bg-slate-50 border border-slate-100">
+              <div class="text-slate-400">Postgres 16</div>
+              <div class="text-slate-800 font-semibold">pool: 20 conns</div>
+            </div>
+            <div class="p-1.5 rounded-lg bg-slate-50 border border-slate-100">
+              <div class="text-slate-400">Redis 7.2</div>
+              <div class="text-slate-800 font-semibold">hit: 98.4%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-700 space-y-0.5">
+          <div class="flex items-center justify-between pb-1 mb-1 border-b border-slate-100 text-[9px]">
+            <span class="text-slate-500 font-semibold">sql/schema.sql</span>
+            <span class="text-indigo-600 font-semibold">PostgreSQL</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">CREATE TABLE</span> <span class="text-teal-700 font-bold">roadmap_progress</span> (</div>
+          <div class="pl-2">id <span class="text-indigo-600 font-semibold">UUID</span> <span class="text-slate-400">PRIMARY KEY</span>,</div>
+          <div class="pl-2">user_id <span class="text-indigo-600 font-semibold">UUID</span> <span class="text-slate-400">REFERENCES users(id)</span>,</div>
+          <div class="pl-2">unit_id <span class="text-indigo-600 font-semibold">VARCHAR(64)</span> <span class="text-amber-700">NOT NULL</span>,</div>
+          <div class="pl-2">status <span class="text-indigo-600 font-semibold">VARCHAR(16)</span> <span class="text-slate-400">DEFAULT 'pending'</span></div>
+          <div>);</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[8px] sm:text-[9px] space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-bold border-b border-slate-100 pb-1">
+            <span class="flex items-center gap-1 text-teal-700"><i data-lucide="search" class="w-3 h-3"></i> EXPLAIN ANALYZE</span>
+            <span class="text-emerald-700 bg-emerald-50 px-1 rounded">0.082ms</span>
+          </div>
+          <div class="text-slate-500 leading-tight">
+            <div>-&gt; Index Scan using ix_user_progress</div>
+            <div class="pl-2 text-indigo-600">cost=0.28..8.29 rows=1</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3 text-indigo-600"></i> SUPABASE CDC</span>
+            <span class="text-[8px] text-emerald-600">WAL streaming</span>
+          </div>
+          <div class="text-[8px] text-slate-500">publication: supabase_realtime</div>
+          <div class="text-[8px] text-slate-400">lag: 0 bytes &bull; lsn: 0/1A94F80</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="hard-drive" class="w-3 h-3 text-indigo-500"></i> PgBouncer</span>
+          <span class="text-emerald-700 font-bold text-[8px]">pool_mode: transaction</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="git-branch" class="w-3 h-3 text-indigo-500"></i> SQLAlchemy 2.0</span>
+            <span class="text-emerald-600 text-[8px]">AsyncSession</span>
+          </div>
+          <div class="text-[8px] text-slate-500">stmt = select(Progress).where(...)</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-teal-600"></i> Table Partition</span>
+          <span class="text-slate-500 text-[8px]">PARTITION BY RANGE</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Redis Lock</span>
+            <span class="text-emerald-600 text-[8px]">TTL: 10s</span>
+          </div>
+          <div class="text-[8px] text-slate-500">redis.lock("lock:user:1042")</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-indigo-600"></i> Cache Hit Ratio</span>
+          <span class="text-emerald-700 font-bold text-[8px]">99.4% hit</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="archive" class="w-3 h-3 text-slate-500"></i> WAL Archive</span>
+          <span class="text-slate-400 text-[8px]">14,208 archived</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 4: Asynchronous Task Workers & Message Queues                 -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="play-circle" class="w-3.5 h-3.5 text-indigo-500"></i> WORKERS &amp; QUEUES
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono font-bold text-slate-900">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> CELERY 5.3</span>
+            <span class="text-emerald-600 text-[9px]">8 WORKERS</span>
+          </div>
+          <div class="text-[9px] sm:text-[10px] font-mono text-slate-500 bg-slate-50 p-1.5 rounded-lg border border-slate-100 flex items-center justify-between">
+            <span>broker: redis://:6379/1</span>
+            <span class="text-indigo-600 font-bold">prefetch: 1</span>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-700 space-y-0.5">
+          <div class="flex items-center justify-between pb-1 mb-1 border-b border-slate-100 text-[9px]">
+            <span class="text-slate-500 font-semibold">tasks/sync_worker.py</span>
+            <span class="text-amber-600 font-semibold">@celery.task</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">@celery.task</span>(bind=<span class="text-indigo-600 font-bold">True</span>, max_retries=<span class="text-amber-700">3</span>)</div>
+          <div><span class="text-indigo-600 font-bold">def</span> <span class="text-blue-700">process_sync_event</span>(self, payload):</div>
+          <div class="pl-2"><span class="text-indigo-600 font-bold">try</span>:</div>
+          <div class="pl-4">db.upsert_progress(payload)</div>
+          <div class="pl-2"><span class="text-indigo-600 font-bold">except</span> DBTransientError:</div>
+          <div class="pl-4">self.retry(countdown=<span class="text-amber-700">5</span>)</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-indigo-600"></i> CELERY BEAT</span>
+            <span class="text-[8px] text-slate-400">crontab</span>
+          </div>
+          <div class="text-[8px] text-slate-500">*/15 * * * * &rarr; flush_stale_cache</div>
+          <div class="text-[8px] text-emerald-600">last_run: 2m ago &bull; next: 13m</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="radio" class="w-3 h-3 text-rose-500"></i> Redis Pub/Sub</span>
+            <span class="text-[8px] text-rose-600 bg-rose-50 px-1 rounded">LIVE</span>
+          </div>
+          <div class="text-[8px] text-slate-500">channel: user:progress:sync</div>
+          <div class="text-[8px] text-indigo-600 font-semibold">84 active subscribers</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="monitor" class="w-3 h-3 text-indigo-500"></i> Flower Dashboard</span>
+          <span class="text-emerald-700 font-bold text-[8px]">0 failed / 48k tasks</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="trophy" class="w-3 h-3 text-amber-500"></i> Redis Sorted Set</span>
+            <span class="text-indigo-600 text-[8px]">ZADD</span>
+          </div>
+          <div class="text-[8px] text-slate-500">ZADD leaderboard 4200 "alex_dev"</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-indigo-500"></i> Arq Job Queue</span>
+          <span class="text-emerald-600 text-[8px]">asyncio_pool</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="message-square" class="w-3 h-3 text-teal-600"></i> RabbitMQ AMQP</span>
+            <span class="text-slate-400 text-[8px]">topic</span>
+          </div>
+          <div class="text-[8px] text-slate-500">exchange: roadmap.events</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="repeat" class="w-3 h-3 text-violet-600"></i> Dramatiq Actor</span>
+          <span class="text-slate-500 text-[8px]">max_retries: 3</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3 text-slate-400"></i> Redis Eviction</span>
+          <span class="text-emerald-600 text-[8px]">allkeys-lru</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 5: FastAPI Router, Dependencies & Terminal Logs               -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-500"></i> API ENDPOINTS
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] space-y-1">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+            <span class="text-emerald-700 font-bold">GET /api/v1/curriculum</span>
+            <span class="text-indigo-600 font-bold">200 OK</span>
+          </div>
+          <div class="text-[8px] sm:text-[9px] text-slate-600 space-y-0.5">
+            <div><span class="text-indigo-600 font-bold">@router.get</span>(<span class="text-amber-700">"/units/{unit_id}"</span>)</div>
+            <div><span class="text-indigo-600 font-bold">async def</span> <span class="text-blue-700">get_unit</span>(unit_id: str,</div>
+            <div class="pl-4">user = <span class="text-teal-700">Depends</span>(get_current_user),</div>
+            <div class="pl-4">cached = <span class="text-teal-700">Depends</span>(redis_cache)):</div>
+            <div class="pl-2"><span class="text-indigo-600 font-bold">return</span> cached <span class="text-indigo-600 font-bold">or</span> await db.fetch(unit_id)</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] space-y-0.5">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+            <span class="text-slate-700 font-bold">core/security.py</span>
+            <span class="text-indigo-600 font-semibold">PyJWT + Bearer</span>
+          </div>
+          <div class="text-[8px] sm:text-[9px] text-slate-600 space-y-0.5">
+            <div><span class="text-indigo-600 font-bold">def</span> <span class="text-blue-700">verify_token</span>(token: str) -&gt; TokenPayload:</div>
+            <div class="pl-2">payload = jwt.decode(token, SECRET, algorithms=[<span class="text-amber-700">"HS256"</span>])</div>
+            <div class="pl-2"><span class="text-indigo-600 font-bold">return</span> TokenPayload(**payload)</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-slate-900 text-slate-200 font-mono text-[8px] sm:text-[9px] space-y-0.5">
+          <div class="flex items-center justify-between text-slate-400 border-b border-slate-800 pb-1 mb-1">
+            <span>uvicorn.stdout</span>
+            <span class="text-emerald-400">ACTIVE</span>
+          </div>
+          <div class="text-emerald-400 font-semibold">INFO: Application startup complete.</div>
+          <div class="text-slate-400">INFO: 127.0.0.1 - "GET /api/v1/sync HTTP/1.1" 200 OK 3.8ms</div>
+          <div class="text-slate-400">INFO: 127.0.0.1 - "POST /api/v1/auth/login" 200 OK 12.1ms</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="file-code" class="w-3 h-3 text-indigo-500"></i> pyproject.toml</span>
+            <span class="text-[8px] text-slate-400">Python 3.12</span>
+          </div>
+          <div class="text-[8px] text-slate-500 space-y-0.5">
+            <div>fastapi = "^0.111.0" &bull; pydantic = "^2.7.1"</div>
+            <div>asyncpg = "^0.29.0" &bull; redis = "^5.0.4"</div>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-indigo-600"></i> Argon2id Hasher</span>
+          <span class="text-emerald-600 text-[8px]">time_cost=3</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3 text-indigo-500"></i> OpenAPI 3.1</span>
+            <span class="text-emerald-600 text-[8px]">Swagger /docs</span>
+          </div>
+          <div class="text-[8px] text-slate-500">48 paths &bull; 12 Pydantic schemas</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="link" class="w-3 h-3 text-indigo-500"></i> HTTPX Pool</span>
+          <span class="text-slate-500 text-[8px]">max_keepalive: 20</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="sliders" class="w-3 h-3 text-violet-600"></i> BaseSettings</span>
+            <span class="text-indigo-600 text-[8px]">.env.production</span>
+          </div>
+          <div class="text-[8px] text-slate-500">SUPABASE_URL &bull; DB_POOL_SIZE</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> test_jwt.py</span>
+          <span class="text-emerald-700 font-bold text-[8px]">PASSED</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 6: CI/CD, Linters & Container Topology                         -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="git-pull-request" class="w-3.5 h-3.5 text-indigo-500"></i> CI/CD &amp; DEVOPS
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5 font-mono text-[9px]">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1"><i data-lucide="github" class="w-3 h-3 text-indigo-600"></i> GITHUB ACTIONS</span>
+            <span class="text-[8px] text-emerald-700 bg-emerald-50 px-1 rounded font-bold">ALL PASS</span>
+          </div>
+          <div class="space-y-0.5 text-[8px] sm:text-[9px] text-slate-500">
+            <div class="flex justify-between"><span>ruff check --fix</span><span class="text-emerald-600 font-semibold">passed 0.14s</span></div>
+            <div class="flex justify-between"><span>mypy --strict src/</span><span class="text-emerald-600 font-semibold">passed 0.88s</span></div>
+            <div class="flex justify-between"><span>pytest -v tests/</span><span class="text-emerald-600 font-semibold">passed 1.84s</span></div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="settings" class="w-3 h-3 text-indigo-500"></i> ruff.toml</span>
+            <span class="text-[8px] text-slate-400">linter</span>
+          </div>
+          <div class="text-[8px] text-slate-500">select = ["E", "F", "I", "UP", "B", "SIM"]</div>
+          <div class="text-[8px] text-slate-400">line-length = 88</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="database" class="w-3 h-3 text-rose-500"></i> Redis Telemetry</span>
+            <span class="text-[8px] text-emerald-600">0 dropped</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[8px]">
+            <div class="p-1 rounded bg-slate-50 text-slate-600">mem: 142.8M</div>
+            <div class="p-1 rounded bg-slate-50 text-slate-600">clients: 38</div>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-indigo-600"></i> CORS Security</span>
+            <span class="text-[8px] text-emerald-600">active</span>
+          </div>
+          <div class="text-[8px] text-slate-500">allow_origins: [production_origin]</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-900 text-slate-300 text-[8px] font-mono space-y-0.5">
+          <div class="text-emerald-400 font-bold flex justify-between">
+            <span>docker ps</span>
+            <span>Up 42h</span>
+          </div>
+          <div class="text-slate-400">api-server:3.12-slim &bull; 0.0.0.0:8000</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3 text-rose-500"></i> Sentry SDK 2.0</span>
+            <span class="text-emerald-600 text-[8px]">connected</span>
+          </div>
+          <div class="text-[8px] text-slate-500">environment: production &bull; sample: 0.2</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3 text-indigo-500"></i> OpenTelemetry</span>
+          <span class="text-slate-500 text-[8px]">span: db.execute</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="box" class="w-3 h-3 text-sky-600"></i> Multi-stage Docker</span>
+            <span class="text-slate-400 text-[8px]">142MB</span>
+          </div>
+          <div class="text-[8px] text-slate-500">FROM python:3.12-slim AS builder</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Locust Load Test</span>
+          <span class="text-emerald-700 font-bold text-[8px]">2,450 req/s &bull; 0% err</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i> Dependabot</span>
+          <span class="text-emerald-700 font-bold text-[8px]">0 CVEs found</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Top Header Navigation -->
+  <header class="max-w-5xl w-full mx-auto flex items-center justify-between py-2 sm:py-3 px-1 sm:px-2 relative z-10 gap-2">
+    <a href="/" class="flex items-center gap-2 sm:gap-3 group shrink-0">
+      <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-xs shrink-0 transition-transform group-hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" class="w-5 h-5 sm:w-6 sm:h-6">
+          <path d="M63.5 8C43.8 8 36.3 16.5 36.3 26.6v11.7h27.7v3.9H25.4C14.7 42.2 6 50.8 6 64.5c0 14.8 9.3 22.8 22.1 22.8h7.9V75.6c0-10.4 8.7-19.4 19.4-19.4h27.4c8.8 0 16-7.3 16-16.1V24.5C98.8 14.2 88.5 8 63.5 8zm-12.7 8.3a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4z" fill="#4F46E5"/>
+          <path d="M64.5 120c19.7 0 27.2-8.5 27.2-18.6V89.7H64v-3.9h38.6c10.7 0 19.4-8.6 19.4-22.3 0-14.8-9.3-22.8-22.1-22.8h-7.9v11.7c0 10.4-8.7 19.4-19.4 19.4H45.2c-8.8 0-16 7.3-16 16.1v15.6c0 10.3 10.3 16.5 35.3 16.5zm12.7-8.3a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z" fill="#10B981"/>
+        </svg>
+      </div>
+      <div>
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-widest text-indigo-600 uppercase">CURRICULUM TRACKER</div>
+        <div class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight whitespace-nowrap">Python Backend Tracker</div>
+      </div>
+    </a>
+
+    <!-- Continue without login action -->
+    <a href="/" class="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs font-mono font-semibold text-slate-700 hover:text-indigo-600 bg-white hover:bg-slate-50 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-200 transition-all shadow-xs group shrink-0">
+      <span>Continue without login</span>
+      <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all"></i>
+    </a>
+  </header>
+
+  <!-- Central Authentication Card -->
+  <main class="w-full flex-1 flex items-center justify-center py-4 sm:py-8 px-1 sm:px-2 relative z-10">
+    <div class="w-full max-w-sm sm:max-w-md">
+      
+      <!-- Elevated White SaaS Card -->
+      <div class="white-saas-card rounded-2xl overflow-hidden">
+        
+        <!-- Tab Selector -->
+        <div class="flex border-b border-slate-100 bg-slate-50/80 p-1 sm:p-1.5 gap-1 sm:gap-1.5">
+          <button id="tab-btn-signin" onclick="switchTab('signin')" class="flex-1 py-2 sm:py-2.5 text-xs font-mono font-bold rounded-xl text-indigo-700 bg-white border border-slate-200/60 shadow-xs transition-all cursor-pointer">
+            Sign In
+          </button>
+          <button id="tab-btn-signup" onclick="switchTab('signup')" class="flex-1 py-2 sm:py-2.5 text-xs font-mono font-semibold rounded-xl text-slate-500 hover:text-slate-800 transition-all cursor-pointer">
+            Create Account
+          </button>
+        </div>
+
+        <!-- Inline Error Banner (Clean, No Emojis) -->
+        <div id="auth-inline-error" class="hidden mx-4 sm:mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 font-mono flex items-start gap-2">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+          <span id="auth-inline-error-text"></span>
+        </div>
+
+        <!-- Sign In Panel -->
+        <div id="view-signin" class="p-5 sm:p-7 space-y-3.5 sm:space-y-4">
+          <div>
+            <h1 class="text-base sm:text-lg font-bold text-slate-950 tracking-tight">Sign in to your tracker</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Access your backend roadmap progress on any device</p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); submitSignIn();" class="space-y-3 sm:space-y-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Username or Email</label>
+              <div class="relative">
+                <input id="signin-identifier" type="text" autocomplete="username" placeholder="e.g. alex_dev" class="w-full pl-9 pr-3 py-2 sm:py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono bg-white text-slate-900" required />
+                <div class="absolute left-3 top-2.5 sm:top-3 text-slate-400">
+                  <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+              <div class="relative">
+                <input id="signin-password" type="password" autocomplete="current-password" placeholder="••••••••" class="w-full pl-9 pr-3 py-2 sm:py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono bg-white text-slate-900" required />
+                <div class="absolute left-3 top-2.5 sm:top-3 text-slate-400">
+                  <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit-signin" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+              <i data-lucide="log-in" class="w-4 h-4"></i>
+              <span>Sign In</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Create Account Panel -->
+        <div id="view-signup" class="p-5 sm:p-7 space-y-3.5 sm:space-y-4 hidden">
+          <div>
+            <h1 class="text-base sm:text-lg font-bold text-slate-950 tracking-tight">Create new account</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Set up your permanent developer username</p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); submitSignUp();" class="space-y-3 sm:space-y-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+              <div class="relative">
+                <input id="signup-name" type="text" placeholder="e.g. Alex Morgan" class="w-full pl-9 pr-3 py-2 sm:py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white text-slate-900" required />
+                <div class="absolute left-3 top-2.5 sm:top-3 text-slate-400">
+                  <i data-lucide="id-card" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-semibold text-slate-700">Username</label>
+                <span class="text-[9px] sm:text-[10px] font-mono text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-medium">
+                  Permanent &bull; One-time
+                </span>
+              </div>
+              <div class="relative">
+                <input id="signup-username" type="text" autocomplete="username" placeholder="e.g. alex_dev" class="w-full pl-9 pr-3 py-2 sm:py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono bg-white text-slate-900" required />
+                <div class="absolute left-3 top-2.5 sm:top-3 text-slate-400">
+                  <i data-lucide="at-sign" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+              <p class="text-[10px] sm:text-[11px] text-slate-500 mt-1 font-mono flex items-center gap-1">
+                <i data-lucide="shield" class="w-3 h-3 text-indigo-600 shrink-0"></i>
+                <span>Unique &bull; Cannot be changed once created.</span>
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+              <div class="relative">
+                <input id="signup-password" type="password" autocomplete="new-password" placeholder="At least 6 characters" class="w-full pl-9 pr-3 py-2 sm:py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono bg-white text-slate-900" minlength="6" required />
+                <div class="absolute left-3 top-2.5 sm:top-3 text-slate-400">
+                  <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit-signup" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>Create Account</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Card Footer Link -->
+        <div class="px-4 sm:px-6 py-3 sm:py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span class="text-slate-500">Want to explore first?</span>
+          <a href="/" class="font-mono text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1 text-[11px] sm:text-xs">
+            Continue without login <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-md w-full mx-auto py-3 sm:py-4 px-2 text-center relative z-10">
+    <p class="text-[10px] sm:text-[11px] font-mono text-slate-400">
+      Python Backend Roadmap Tracker
+    </p>
+  </footer>
+
+  <script>
+    const SUPABASE_URL = "https://kafochgrpqztvdajdwmq.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_JLkDBdlAFIvYIQvXwmfC1w_kyi76TZb";
+    let supabaseClient = null;
+
+    try {
+      if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (e) {
+      console.error("Supabase init error:", e);
+    }
+
+    function showToast(type, msg) {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      const bg = { error:'bg-rose-600', warning:'bg-amber-600', success:'bg-emerald-600', info:'bg-indigo-600' }[type] || 'bg-indigo-600';
+      t.className = `${bg} text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-mono font-medium flex items-center gap-2 pointer-events-auto transition-all duration-300 translate-y-2 opacity-0 max-w-sm`;
+      t.innerHTML = `<span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.classList.remove('translate-y-2','opacity-0'), 10);
+      setTimeout(() => {
+        t.classList.add('opacity-0','translate-y-2');
+        setTimeout(() => t.remove(), 300);
+      }, 2500);
+    }
+
+    function showAuthError(msg) {
+      const banner = document.getElementById('auth-inline-error');
+      const text = document.getElementById('auth-inline-error-text');
+      if (banner && text) {
+        text.textContent = msg;
+        banner.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+
+    function clearAuthError() {
+      const banner = document.getElementById('auth-inline-error');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+      clearAuthError();
+      const btnSignin = document.getElementById('tab-btn-signin');
+      const btnSignup = document.getElementById('tab-btn-signup');
+      const viewSignin = document.getElementById('view-signin');
+      const viewSignup = document.getElementById('view-signup');
+
+      if (tab === 'signup') {
+        btnSignup.className = "flex-1 py-2.5 text-xs font-mono font-bold rounded-xl text-indigo-700 bg-white border border-slate-200/60 shadow-xs transition-all cursor-pointer";
+        btnSignin.className = "flex-1 py-2.5 text-xs font-mono font-semibold rounded-xl text-slate-500 hover:text-slate-800 transition-all cursor-pointer";
+        viewSignup.classList.remove('hidden');
+        viewSignin.classList.add('hidden');
+      } else {
+        btnSignin.className = "flex-1 py-2.5 text-xs font-mono font-bold rounded-xl text-indigo-700 bg-white border border-slate-200/60 shadow-xs transition-all cursor-pointer";
+        btnSignup.className = "flex-1 py-2.5 text-xs font-mono font-semibold rounded-xl text-slate-500 hover:text-slate-800 transition-all cursor-pointer";
+        viewSignin.classList.remove('hidden');
+        viewSignup.classList.add('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    function formatAuthEmail(input) {
+      const trimmed = (input || '').trim();
+      if (trimmed.includes('@')) return trimmed;
+      const cleanUser = trimmed.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+      return `${cleanUser}@tracker.app`;
+    }
+
+    async function submitSignIn() {
+      clearAuthError();
+      const identifier = document.getElementById('signin-identifier').value.trim();
+      const password = document.getElementById('signin-password').value;
+      const btn = document.getElementById('btn-submit-signin');
+
+      if (!identifier || !password) {
+        showAuthError('Please enter username and password.');
+        showToast('error', 'Please enter username and password.');
+        return;
+      }
+
+      if (!supabaseClient) {
+        showAuthError('Supabase client connection failed.');
+        return;
+      }
+
+      const email = formatAuthEmail(identifier);
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-0.5 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Signing in...`;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) {
+          if (error.message && error.message.includes('Email not confirmed')) {
+            showAuthError('Email unconfirmed. In Supabase Dashboard > Auth > Providers > Email, turn OFF "Confirm email".');
+            showToast('error', 'Email confirmation required in Supabase settings.');
+          } else if (error.message && error.message.includes('Invalid login credentials')) {
+            showAuthError('Invalid username or password.');
+            showToast('error', 'Invalid username or password.');
+          } else {
+            showAuthError(error.message || 'Login failed.');
+            showToast('error', error.message || 'Login failed.');
+          }
+          return;
+        }
+
+        showToast('success', 'Logged in! Redirecting to tracker...');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 300);
+      } catch (err) {
+        showAuthError(err.message || 'Sign in error');
+        showToast('error', err.message || 'Sign in error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>Sign In</span>`;
+        lucide.createIcons();
+      }
+    }
+
+    async function submitSignUp() {
+      clearAuthError();
+      const name = document.getElementById('signup-name').value.trim();
+      const rawUser = document.getElementById('signup-username').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const btn = document.getElementById('btn-submit-signup');
+
+      const cleanUser = rawUser.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+
+      if (!cleanUser) {
+        showAuthError('Please enter a valid username.');
+        showToast('error', 'Please enter a valid username.');
+        return;
+      }
+      if (!name) {
+        showAuthError('Please enter your full name.');
+        showToast('error', 'Please enter your name.');
+        return;
+      }
+      if (!password || password.length < 6) {
+        showAuthError('Password must be at least 6 characters long.');
+        showToast('error', 'Password must be at least 6 characters.');
+        return;
+      }
+
+      if (!supabaseClient) {
+        showAuthError('Supabase connection not ready.');
+        return;
+      }
+
+      const authEmail = `${cleanUser}@tracker.app`;
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-0.5 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Checking username & creating...`;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: authEmail,
+          password: password,
+          options: {
+            data: {
+              name: name,
+              username: cleanUser
+            }
+          }
+        });
+
+        // 1. Strict duplicate username check
+        if (error) {
+          if (error.message && (error.message.includes('already registered') || error.message.includes('User already registered') || error.status === 422)) {
+            showAuthError(`Username "@${cleanUser}" is already taken. Please choose another.`);
+            showToast('error', `Username "@${cleanUser}" is already taken.`);
+          } else if (error.message && error.message.includes('rate limit')) {
+            showAuthError('Email rate limit reached. In Supabase Dashboard, disable "Confirm email" under Auth > Providers > Email.');
+            showToast('error', 'Email rate limit reached.');
+          } else {
+            showAuthError(error.message || 'Registration failed.');
+            showToast('error', error.message || 'Sign up failed.');
+          }
+          return;
+        }
+
+        // 2. Supabase empty identities check
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          showAuthError(`Username "@${cleanUser}" already exists. Please choose another or sign in.`);
+          showToast('error', `Username "@${cleanUser}" is already taken.`);
+          return;
+        }
+
+        if (data.session) {
+          showToast('success', `Account created! Welcome, @${cleanUser}`);
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 300);
+        } else if (data.user) {
+          showToast('info', 'Account registered! If "Confirm email" is on in Supabase, toggle it off to sign in immediately.');
+          switchTab('signin');
+          const idInput = document.getElementById('signin-identifier');
+          if (idInput) idInput.value = cleanUser;
+        }
+      } catch (err) {
+        showAuthError(err.message || 'Signup error');
+        showToast('error', err.message || 'Signup error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="user-plus" class="w-4 h-4"></i> <span>Create Account</span>`;
+        lucide.createIcons();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user) {
+          // Already logged in - redirect to tracker
+          window.location.href = '/';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
