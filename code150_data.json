@@ -1,0 +1,510 @@
+[
+  {
+    "id": "two_pointers",
+    "title": "Two Pointers",
+    "patterns": [
+      {
+        "id": "converging_two_pointers_(sorted_",
+        "title": "Converging Two Pointers (Sorted Array Target Sum)",
+        "items": [
+          "Two Sum",
+          "Container With Most Water",
+          "3Sum",
+          "3Sum Closest",
+          "4Sum",
+          "Two Sum II - Input Array Is Sorted",
+          "Intersection of Two Arrays",
+          "Is Subsequence",
+          "Boats to Save People",
+          "Squares of a Sorted Array",
+          "3Sum Smaller"
+        ]
+      },
+      {
+        "id": "in-place_array_modification",
+        "title": "In-place Array Modification",
+        "items": [
+          "Remove Duplicates from Sorted Array",
+          "Remove Element",
+          "Sort Colors",
+          "Remove Duplicates from Sorted Array II",
+          "Move Zeroes",
+          "String Compression",
+          "Sort Array By Parity",
+          "Move Pieces to Obtain a String",
+          "Separate Black and White Balls"
+        ]
+      },
+      {
+        "id": "expanding_from_center_(palindrom",
+        "title": "Expanding From Center (Palindromes)",
+        "items": [
+          "Longest Palindromic Substring",
+          "Palindromic Substrings"
+        ]
+      },
+      {
+        "id": "string_reversal",
+        "title": "String Reversal",
+        "items": [
+          "Reverse Words in a String",
+          "Reverse String",
+          "Reverse Vowels of a String",
+          "Reverse String II"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sliding_window",
+    "title": "Sliding Window",
+    "patterns": [
+      {
+        "id": "variable_size_(condition-based)",
+        "title": "Variable Size (Condition-Based)",
+        "items": [
+          "Longest Substring Without Repeating Characters",
+          "Minimum Window Substring",
+          "Minimum Size Subarray Sum",
+          "Contains Duplicate II",
+          "Longest Repeating Character Replacement",
+          "Subarray Product Less Than K",
+          "Fruit Into Baskets",
+          "Max Consecutive Ones III",
+          "Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit",
+          "Longest Subarray of 1's After Deleting One Element",
+          "Minimum Operations to Reduce X to Zero",
+          "Frequency of the Most Frequent Element",
+          "Maximum Sum of Distinct Subarrays With Length K",
+          "Take K of Each Character From Left and Right",
+          "Continuous Subarrays",
+          "Maximum Beauty of an Array After Applying Operation",
+          "Find Longest Special Substring That Occurs Thrice I",
+          "Maximum Good Subarray Sum",
+          "Maximum Frequency of an Element After Performing Operations I",
+          "Maximum Frequency of an Element After Performing Operations II"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "trees",
+    "title": "Trees",
+    "patterns": [
+      {
+        "id": "level_order_traversal_(bfs)",
+        "title": "Level Order Traversal (BFS)",
+        "items": [
+          "Binary Tree Level Order Traversal",
+          "Binary Tree Zigzag Level Order Traversal",
+          "Binary Tree Right Side View",
+          "Find Largest Value in Each Tree Row",
+          "Maximum Level Sum of a Binary Tree"
+        ]
+      },
+      {
+        "id": "recursive_preorder_traversal",
+        "title": "Recursive Preorder Traversal",
+        "items": [
+          "Same Tree",
+          "Symmetric Tree",
+          "Construct Binary Tree from Preorder and Inorder Traversal",
+          "Flatten Binary Tree to Linked List",
+          "Invert Binary Tree",
+          "Binary Tree Paths",
+          "Smallest String Starting From Leaf"
+        ]
+      },
+      {
+        "id": "recursive_inorder_traversal",
+        "title": "Recursive Inorder Traversal",
+        "items": [
+          "Binary Tree Inorder Traversal",
+          "Validate Binary Search Tree",
+          "Binary Search Tree Iterator",
+          "Kth Smallest Element in a BST",
+          "Find Mode in Binary Search Tree",
+          "Minimum Absolute Difference in BST"
+        ]
+      },
+      {
+        "id": "recursive_postorder_traversal",
+        "title": "Recursive Postorder Traversal",
+        "items": [
+          "Maximum Depth of Binary Tree",
+          "Balanced Binary Tree",
+          "Binary Tree Maximum Path Sum",
+          "Binary Tree Postorder Traversal",
+          "House Robber III",
+          "Find Leaves of Binary Tree",
+          "Diameter of Binary Tree",
+          "All Nodes Distance K in Binary Tree",
+          "Delete Nodes And Return Forest",
+          "Height of Binary Tree After Subtree Removal Queries"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "graphs",
+    "title": "Graphs",
+    "patterns": [
+      {
+        "id": "dfs_-_connected_components___isl",
+        "title": "DFS - Connected Components / Island Counting",
+        "items": [
+          "Surrounded Regions",
+          "Number of Islands",
+          "Pacific Atlantic Water Flow",
+          "Number of Provinces",
+          "Max Area of Island",
+          "Flood Fill",
+          "Keys and Rooms",
+          "Number of Enclaves",
+          "Number of Closed Islands",
+          "Count Sub Islands",
+          "Detonate the Maximum Bombs"
+        ]
+      },
+      {
+        "id": "bfs_-_connected_components___isl",
+        "title": "BFS - Connected Components / Island Counting",
+        "items": [
+          "Word Ladder",
+          "01 Matrix",
+          "Rotting Oranges",
+          "Shortest Path in Binary Matrix"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dynamic_programming",
+    "title": "Dynamic Programming",
+    "patterns": [
+      {
+        "id": "1d_array_(fibonacci_style)",
+        "title": "1D Array (Fibonacci Style)",
+        "items": [
+          "Climbing Stairs",
+          "Decode Ways",
+          "House Robber",
+          "House Robber II",
+          "House Robber III",
+          "Fibonacci Number",
+          "Delete and Earn",
+          "Min Cost Climbing Stairs"
+        ]
+      },
+      {
+        "id": "1d_array_(kadane's_algorithm_for",
+        "title": "1D Array (Kadane's Algorithm for Max/Min Subarray)",
+        "items": [
+          "Maximum Subarray"
+        ]
+      },
+      {
+        "id": "1d_array_(coin_change___unbounde",
+        "title": "1D Array (Coin Change / Unbounded Knapsack Style)",
+        "items": [
+          "Coin Change",
+          "Combination Sum IV",
+          "Coin Change II"
+        ]
+      },
+      {
+        "id": "2d_array_(unique_paths_on_grid)",
+        "title": "2D Array (Unique Paths on Grid)",
+        "items": [
+          "Unique Paths",
+          "Unique Paths II",
+          "Minimum Path Sum",
+          "Triangle",
+          "Maximal Square",
+          "Minimum Falling Path Sum",
+          "Count Square Submatrices with All Ones"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "binary_search",
+    "title": "Binary Search",
+    "patterns": [
+      {
+        "id": "on_sorted_array_list",
+        "title": "On Sorted Array/List",
+        "items": [
+          "Search Insert Position",
+          "Sqrt(x)",
+          "Search a 2D Matrix",
+          "First Bad Version",
+          "Guess Number Higher or Lower",
+          "Single Element in a Sorted Array"
+        ]
+      },
+      {
+        "id": "find_min_max_in_rotated_sorted_a",
+        "title": "Find Min/Max in Rotated Sorted Array",
+        "items": [
+          "Search in Rotated Sorted Array",
+          "Search in Rotated Sorted Array II",
+          "Find Minimum in Rotated Sorted Array",
+          "Find Peak Element",
+          "Peak Index in a Mountain Array",
+          "Find in Mountain Array"
+        ]
+      },
+      {
+        "id": "find_first_last_occurrence",
+        "title": "Find First/Last Occurrence",
+        "items": [
+          "Find First and Last Position of Element in Sorted Array",
+          "Find K Closest Elements"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stack",
+    "title": "Stack",
+    "patterns": [
+      {
+        "id": "valid_parentheses_matching",
+        "title": "Valid Parentheses Matching",
+        "items": [
+          "Valid Parentheses",
+          "Longest Valid Parentheses",
+          "Minimum Add to Make Parentheses Valid",
+          "Minimum Remove to Make Valid Parentheses",
+          "Minimum Number of Swaps to Make the String Balanced"
+        ]
+      },
+      {
+        "id": "monotonic_stack",
+        "title": "Monotonic Stack",
+        "items": [
+          "Remove K Digits",
+          "Next Greater Element I",
+          "Next Greater Element II",
+          "Daily Temperatures",
+          "Online Stock Span",
+          "Sum of Subarray Minimums",
+          "Maximum Width Ramp",
+          "Final Prices With a Special Discount in a Shop",
+          "Find the Most Competitive Subsequence"
+        ]
+      },
+      {
+        "id": "min_stack_design",
+        "title": "Min Stack Design",
+        "items": [
+          "Min Stack"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "linked_list",
+    "title": "Linked List",
+    "patterns": [
+      {
+        "id": "in-place_reversal",
+        "title": "In-place Reversal",
+        "items": [
+          "Remove Duplicates from Sorted List",
+          "Reverse Linked List II",
+          "Reverse Linked List",
+          "Reverse Nodes in k-Group",
+          "Palindrome Linked List",
+          "Remove Duplicates from Sorted List II"
+        ]
+      },
+      {
+        "id": "merging_two_sorted_lists",
+        "title": "Merging Two Sorted Lists",
+        "items": [
+          "Merge Two Sorted Lists"
+        ]
+      },
+      {
+        "id": "reordering___partitioning",
+        "title": "Reordering / Partitioning",
+        "items": [
+          "Swap Nodes in Pairs",
+          "Rotate List",
+          "Partition List",
+          "Reorder List",
+          "Odd Even Linked List"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "array_matrix_manipulation",
+    "title": "Array/Matrix Manipulation",
+    "patterns": [
+      {
+        "id": "in-place_rotation",
+        "title": "In-place Rotation",
+        "items": [
+          "Rotate Image",
+          "Rotate Array"
+        ]
+      },
+      {
+        "id": "spiral_traversal",
+        "title": "Spiral Traversal",
+        "items": [
+          "Spiral Matrix",
+          "Spiral Matrix III",
+          "Spiral Matrix IV"
+        ]
+      },
+      {
+        "id": "set_matrix_zeroes_(in-place_mark",
+        "title": "Set Matrix Zeroes (In-place Marking)",
+        "items": [
+          "Set Matrix Zeroes"
+        ]
+      },
+      {
+        "id": "product_except_self_(prefix_suff",
+        "title": "Product Except Self (Prefix/Suffix Products)",
+        "items": [
+          "Product of Array Except Self"
+        ]
+      },
+      {
+        "id": "plus_one_(handling_carry)",
+        "title": "Plus One (Handling Carry)",
+        "items": [
+          "Plus One"
+        ]
+      },
+      {
+        "id": "merge_sorted_array_(in-place_fro",
+        "title": "Merge Sorted Array (In-place from End)",
+        "items": [
+          "Merge Sorted Array"
+        ]
+      },
+      {
+        "id": "cyclic_sort",
+        "title": "Cyclic Sort",
+        "items": [
+          "First Missing Positive",
+          "Missing Number",
+          "Find the Duplicate Number",
+          "Find All Duplicates in an Array",
+          "Find All Numbers Disappeared in an Array"
+        ]
+      },
+      {
+        "id": "kadane's_variant_for_maximum_pro",
+        "title": "Kadane's Variant for Maximum Product",
+        "items": [
+          "Maximum Product Subarray"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "string_manipulation",
+    "title": "String Manipulation",
+    "patterns": [
+      {
+        "id": "palindrome_check_(two_pointers__",
+        "title": "Palindrome Check (Two Pointers / Reverse)",
+        "items": [
+          "Palindrome Number",
+          "Valid Palindrome",
+          "Valid Palindrome II"
+        ]
+      },
+      {
+        "id": "anagram_check_(frequency_count_s",
+        "title": "Anagram Check (Frequency Count/Sort)",
+        "items": [
+          "Group Anagrams",
+          "Valid Anagram"
+        ]
+      },
+      {
+        "id": "roman_to_integer_conversion",
+        "title": "Roman to Integer Conversion",
+        "items": [
+          "Roman to Integer"
+        ]
+      },
+      {
+        "id": "string_to_integer_(atoi)",
+        "title": "String to Integer (atoi)",
+        "items": [
+          "String to Integer (atoi)"
+        ]
+      },
+      {
+        "id": "multiply_strings_(manual_simulat",
+        "title": "Multiply Strings (Manual Simulation)",
+        "items": [
+          "Multiply Strings"
+        ]
+      },
+      {
+        "id": "string_matching_-_naive___kmp___",
+        "title": "String Matching - Naive / KMP / Rabin-Karp",
+        "items": [
+          "Find the Index of the First Occurrence in a String",
+          "Shortest Palindrome",
+          "Repeated String Match",
+          "Rotate String",
+          "Find Beautiful Indices in the Given Array II"
+        ]
+      },
+      {
+        "id": "repeated_substring_pattern_detec",
+        "title": "Repeated Substring Pattern Detection",
+        "items": [
+          "Repeated Substring Pattern"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "heap",
+    "title": "Heap",
+    "patterns": [
+      {
+        "id": "top_k_elements_(selection_freque",
+        "title": "Top K Elements (Selection/Frequency)",
+        "items": [
+          "Kth Largest Element in an Array",
+          "Top K Frequent Elements",
+          "Sort Characters By Frequency",
+          "Relative Ranks",
+          "Kth Largest Element in a Stream",
+          "K Closest Points to Origin",
+          "Last Stone Weight",
+          "Take Gifts From the Richest Pile"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "backtracking",
+    "title": "Backtracking",
+    "patterns": [
+      {
+        "id": "subsets_(include_exclude)",
+        "title": "Subsets (Include/Exclude)",
+        "items": [
+          "Letter Combinations of a Phone Number",
+          "Combinations",
+          "Subsets",
+          "Subsets II"
+        ]
+      }
+    ]
+  }
+]
