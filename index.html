@@ -115,6 +115,780 @@
 
   
   <!-- ========================================================================= -->
+  <!-- BIG SCREEN NOTES MODAL (Spacious, distraction-free study notes editor)    -->
+  <!-- ========================================================================= -->
+  <div id="notes-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-[9997] flex items-center justify-center p-2 sm:p-4 md:p-6 opacity-0 pointer-events-none transition-all duration-300 hidden">
+    <div id="notes-modal-card" class="bg-white rounded-2xl border border-slate-200/90 shadow-2xl w-full max-w-5xl h-[88vh] flex flex-col overflow-hidden transform scale-95 transition-all duration-300 relative z-10" onclick="event.stopPropagation()">
+      
+      <!-- Top Modal Header -->
+      <div class="px-4 sm:px-6 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3 bg-slate-50/70 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span id="notes-phase-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 shrink-0">PHASE</span>
+              <span id="notes-save-status" class="text-[11px] font-mono text-emerald-600 flex items-center gap-1">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i> Saved
+              </span>
+            </div>
+            <h3 id="notes-topic-title" class="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate mt-0.5">
+              Topic Notes
+            </h3>
+          </div>
+        </div>
+
+        <!-- Controls: Word count, View mode tabs, Fullscreen, Close -->
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="hidden sm:flex items-center font-mono text-[11px] text-slate-400 bg-white border border-slate-200 px-2.5 py-1 rounded-lg">
+            <span id="notes-stat-words">0 words</span>
+            <span class="mx-1.5 text-slate-300">•</span>
+            <span id="notes-stat-chars">0 chars</span>
+          </div>
+
+          <!-- Mode Selector (Write, Split, Preview) -->
+          <div class="flex items-center bg-slate-200/70 p-0.5 rounded-lg text-xs font-mono">
+            <button type="button" id="notes-tab-write" onclick="setNotesViewMode('write')" class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-indigo-700 shadow-2xs transition-all">
+              Write
+            </button>
+            <button type="button" id="notes-tab-split" onclick="setNotesViewMode('split')" class="hidden md:block px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all">
+              Split
+            </button>
+            <button type="button" id="notes-tab-preview" onclick="setNotesViewMode('preview')" class="px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all">
+              Preview
+            </button>
+          </div>
+
+          <!-- Fullscreen Toggle -->
+          <button type="button" onclick="toggleNotesFullscreen()" id="btn-notes-fullscreen" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs" title="Toggle Big Screen / Fullscreen">
+            <i data-lucide="maximize-2" id="icon-notes-fullscreen" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <!-- Close -->
+          <button type="button" onclick="closeNotesModal()" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs" title="Close Notes (Esc)">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Markdown Quick Toolbar -->
+      <div id="notes-toolbar" class="px-4 py-2 bg-white border-b border-slate-100 flex items-center gap-1.5 flex-wrap shrink-0 font-mono text-xs">
+        <button type="button" onclick="insertMarkdownSnippet('h2')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700 font-bold" title="Heading 2">H2</button>
+        <button type="button" onclick="insertMarkdownSnippet('h3')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700 font-bold" title="Heading 3">H3</button>
+        <div class="h-4 w-px bg-slate-200 mx-0.5"></div>
+        <button type="button" onclick="insertMarkdownSnippet('bold')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700 font-bold" title="Bold">B</button>
+        <button type="button" onclick="insertMarkdownSnippet('italic')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700 italic font-serif" title="Italic">I</button>
+        <div class="h-4 w-px bg-slate-200 mx-0.5"></div>
+        <button type="button" onclick="insertMarkdownSnippet('code-inline')" class="px-2 py-1 rounded hover:bg-slate-100 text-indigo-600 font-semibold" title="Inline Code">&lt;/&gt;</button>
+        <button type="button" onclick="insertMarkdownSnippet('code-block')" class="px-2 py-1 rounded hover:bg-slate-100 text-indigo-600 font-semibold" title="Python Code Block">```python</button>
+        <div class="h-4 w-px bg-slate-200 mx-0.5"></div>
+        <button type="button" onclick="insertMarkdownSnippet('list')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700 flex items-center gap-1" title="Bullet List"><i data-lucide="list" class="w-3.5 h-3.5"></i></button>
+        <button type="button" onclick="insertMarkdownSnippet('task')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700 flex items-center gap-1" title="Checklist"><i data-lucide="check-square" class="w-3.5 h-3.5"></i></button>
+        <button type="button" onclick="insertMarkdownSnippet('quote')" class="px-2 py-1 rounded hover:bg-slate-100 text-slate-700" title="Blockquote">&gt; Quote</button>
+        <div class="h-4 w-px bg-slate-200 mx-0.5"></div>
+        <button type="button" onclick="insertMarkdownSnippet('template')" class="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-[11px]" title="Insert study template">
+          + Template
+        </button>
+      </div>
+
+      <!-- Editor / Preview Body Container -->
+      <div class="flex-1 flex overflow-hidden bg-slate-50/30">
+        <!-- Editor Pane -->
+        <div id="notes-editor-pane" class="flex-1 flex flex-col h-full overflow-hidden border-r border-slate-100">
+          <textarea id="notes-textarea" oninput="handleNotesInput()" placeholder="Write study notes, key Python backend concepts, code examples, interview questions, or edge-cases...
+
+Supports Markdown:
+- # or ## for headings
+- ```python for code snippets
+- - [ ] for checklists" class="w-full flex-1 p-4 sm:p-6 font-mono text-xs sm:text-sm text-slate-800 leading-relaxed bg-white focus:outline-none resize-none selection:bg-indigo-100 selection:text-indigo-900"></textarea>
+        </div>
+
+        <!-- Preview Pane -->
+        <div id="notes-preview-pane" class="flex-1 p-4 sm:p-6 overflow-y-auto bg-white hidden prose prose-slate max-w-none text-slate-800 text-xs sm:text-sm">
+          <div id="notes-preview-content" class="space-y-3 font-sans"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Footer -->
+      <div class="px-4 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50/80 shrink-0 text-xs font-mono">
+        <div class="text-slate-400 text-[11px] truncate flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+          <span class="truncate">Notes auto-save continuously and sync to cloud.</span>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="copyNotesToClipboard()" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy</span>
+          </button>
+          <button type="button" onclick="clearCurrentNote()" class="px-3 py-1.5 rounded-lg border border-rose-200 hover:border-rose-300 bg-rose-50/60 hover:bg-rose-100 text-rose-700 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Clear</span>
+          </button>
+          <button type="button" onclick="closeNotesModal()" class="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+            <span>Done</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Dedicated Login / Register Page View -->
+  <div id="auth-modal" class="fixed inset-0 z-[9998] login-bg-pattern flex flex-col items-center justify-center p-4 sm:p-6 opacity-0 pointer-events-none transition-all duration-300 overflow-y-auto hidden">
+    
+    <!-- COMPLETE BACKEND ARCHITECTURE & PYTHON CODE RICH BACKGROUND CANVAS        -->
+  <!-- Rotated -9deg, scale 1.35, 6 dense columns: NO empty space on any screen   -->
+  <!-- ========================================================================= -->
+  <div class="fixed -inset-[20%] pointer-events-none select-none overflow-hidden z-0 flex items-center justify-center opacity-80 filter blur-[1px]">
+    
+    <div class="w-[140vw] min-w-[1400px] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-3.5 p-4" style="transform: rotate(-9deg); transform-origin: center center;">
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 1: API Gateway, Ingress, DNS & Metrics                         -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="network" class="w-3.5 h-3.5 text-indigo-500"></i> INGRESS &amp; ROUTING
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
+            <span class="font-bold text-indigo-700 flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3 h-3 text-indigo-600"></i> CLOUDFLARE EDGE
+            </span>
+            <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">200 OK &bull; 2.4ms</span>
+          </div>
+          <div class="text-[9px] sm:text-[10px] font-mono text-slate-500 bg-slate-50/80 p-1.5 rounded-lg border border-slate-100 flex items-center justify-between">
+            <span>RateLimiter: 500 req/min</span>
+            <span class="text-indigo-600 font-semibold">HTTP/3 &bull; TLS 1.3</span>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1 text-[9px] sm:text-[10px] font-mono">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1"><i data-lucide="split" class="w-3 h-3 text-indigo-500"></i> ENVOY PROXY</span>
+            <span class="text-emerald-600 text-[8px]">healthy</span>
+          </div>
+          <div class="text-slate-500">upstream: fast_api_cluster</div>
+          <div class="text-[8px] sm:text-[9px] text-indigo-700">mTLS verified &bull; circuit_breaker: OFF</div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1 font-mono text-[9px] sm:text-[10px]">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-amber-500"></i> PROMETHEUS</span>
+            <span class="text-[8px] text-slate-400">99.98% uptime</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[8px] sm:text-[9px]">
+            <div class="p-1 rounded bg-slate-50 border border-slate-100 text-slate-700">1.42M req/day</div>
+            <div class="p-1 rounded bg-emerald-50 border border-emerald-100 text-emerald-800 font-semibold">p95: 4.2ms</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-teal-600"></i> Kafka Stream</span>
+            <span class="text-[8px] text-teal-700 bg-teal-50 px-1 rounded">ack=all</span>
+          </div>
+          <div class="text-slate-500">topic: user.curriculum.progress</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-100/90 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="flex items-center gap-1 font-semibold text-slate-700">
+            <i data-lucide="box" class="w-3 h-3 text-indigo-500"></i> docker-compose
+          </span>
+          <span class="text-emerald-700 font-bold text-[8px] bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">5/5 up</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3 text-indigo-600"></i> Let's Encrypt</span>
+          <span class="text-emerald-600">auto-renew: valid 88d</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="shuffle" class="w-3 h-3 text-sky-600"></i> NGINX UPSTREAM</span>
+            <span class="text-[8px] text-sky-700 bg-sky-50 px-1 rounded">unix_sock</span>
+          </div>
+          <div class="text-[8px] text-slate-500">proxy_pass http://unix:/run/uvicorn.sock;</div>
+          <div class="text-[8px] text-indigo-600 font-medium">keepalive 64; proxy_http_version 1.1;</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3 text-indigo-600"></i> AWS Route 53</span>
+          <span class="text-slate-500">latency: 12ms</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-indigo-600"></i> WAF Security</span>
+            <span class="text-[8px] text-emerald-700 bg-emerald-50 px-1 rounded">OWASP CRS</span>
+          </div>
+          <div class="text-slate-500">SQLi &bull; XSS &bull; CSRF Filter: PASS</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="flex items-center gap-1 text-slate-700"><i data-lucide="cpu" class="w-3 h-3 text-violet-600"></i> HAProxy Node</span>
+          <span class="text-emerald-600 font-bold text-[8px]">balance: roundrobin</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-rose-500"></i> Datadog APM</span>
+          <span class="text-slate-500 text-[8px]">trace_id: 8f92a1</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 2: FastAPI ASGI Cluster, Pydantic & Alembic                    -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-500"></i> FASTAPI RUNTIME
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
+            <span class="font-bold text-slate-900 flex items-center gap-1">
+              <i data-lucide="server" class="w-3 h-3 text-indigo-600"></i> FASTAPI ASGI
+            </span>
+            <span class="text-[9px] text-slate-400 font-mono">uvloop</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[8px] sm:text-[9px] font-mono">
+            <div class="p-1 rounded bg-indigo-50/60 border border-indigo-100 text-indigo-900">12k rps</div>
+            <div class="p-1 rounded bg-emerald-50/60 border border-emerald-100 text-emerald-900">p99 &lt; 5ms</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-700 space-y-0.5">
+          <div class="flex items-center justify-between pb-1 mb-1 border-b border-slate-100 text-[9px]">
+            <span class="text-slate-500 font-semibold">schemas/mastery.py</span>
+            <span class="text-emerald-700 font-semibold">Pydantic v2</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">class</span> <span class="text-teal-700 font-bold">MasteryRecord</span>(<span class="text-slate-600">BaseModel</span>):</div>
+          <div class="pl-2">user_id: <span class="text-teal-700">UUID4</span></div>
+          <div class="pl-2">status: <span class="text-teal-700">Literal</span>[<span class="text-amber-700">"MASTERED"</span>]</div>
+          <div class="pl-2">synced_at: <span class="text-teal-700">datetime</span> = Field(default=utcnow)</div>
+          <div class="pl-2 text-slate-400">model_config = ConfigDict(frozen=<span class="text-indigo-600 font-bold">True</span>)</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold border-b border-slate-100 pb-1">
+            <span class="flex items-center gap-1 text-indigo-600"><i data-lucide="git-commit" class="w-3 h-3"></i> alembic</span>
+            <span class="text-slate-400 text-[8px]">9f8b1c2d.py</span>
+          </div>
+          <div class="text-[8px] sm:text-[9px] text-slate-600 space-y-0.5">
+            <div><span class="text-indigo-600 font-bold">def</span> upgrade():</div>
+            <div class="pl-2">op.create_table(<span class="text-amber-700">'roadmap_progress'</span>, ...)</div>
+            <div class="pl-2">op.create_index(<span class="text-amber-700">'ix_user_unit'</span>, ...)</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5 leading-tight">
+          <div class="flex items-center justify-between text-slate-400 text-[8px] pb-1 border-b border-slate-100">
+            <span>tests/test_sync.py</span>
+            <span class="text-emerald-600 font-semibold">pytest-asyncio</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">@pytest.mark</span>.<span class="text-emerald-600">asyncio</span></div>
+          <div><span class="text-indigo-600 font-bold">async def</span> <span class="text-blue-700">test_sync</span>(client: <span class="text-teal-700">AsyncClient</span>):</div>
+          <div class="pl-2">res = <span class="text-indigo-600 font-bold">await</span> client.get(<span class="text-amber-700">"/api/v1/sync"</span>)</div>
+          <div class="pl-2"><span class="text-indigo-600 font-bold">assert</span> res.status_code == 200</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-indigo-700 font-semibold">typing.Protocol</span>
+          <span>RuntimeCheckable</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-indigo-500"></i> Middleware</span>
+            <span class="text-slate-400 text-[8px]">BaseHTTPMiddleware</span>
+          </div>
+          <div class="text-[8px] text-slate-500">request.state.trace_id = uuid4()</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i> FieldValidator</span>
+          <span class="text-slate-500 text-[8px]">mode='after'</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> ANYIO TASKGROUP</span>
+            <span class="text-[8px] text-emerald-600">concurrency: 64</span>
+          </div>
+          <div class="text-[8px] text-slate-500">async with anyio.create_task_group() as tg:</div>
+          <div class="text-[8px] text-indigo-600 font-medium pl-2">tg.start_soon(sync_wal_records)</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="server" class="w-3 h-3 text-indigo-500"></i> Granian ASGI</span>
+          <span class="text-emerald-700 font-bold text-[8px]">workers: 4 &bull; threads: 2</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Pytest Coverage</span>
+          <span class="text-emerald-700 font-bold text-[8px]">98.4% (412 tests)</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 3: Database & Cache Tier                                       -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="database" class="w-3.5 h-3.5 text-indigo-500"></i> DATA TIER
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono font-bold text-slate-900">
+            <span class="flex items-center gap-1"><i data-lucide="database" class="w-3 h-3 text-indigo-600"></i> DUAL DB ENGINE</span>
+            <span class="text-[9px] text-emerald-600">HEALTHY</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-[8px] sm:text-[9px] font-mono">
+            <div class="p-1.5 rounded-lg bg-slate-50 border border-slate-100">
+              <div class="text-slate-400">Postgres 16</div>
+              <div class="text-slate-800 font-semibold">pool: 20 conns</div>
+            </div>
+            <div class="p-1.5 rounded-lg bg-slate-50 border border-slate-100">
+              <div class="text-slate-400">Redis 7.2</div>
+              <div class="text-slate-800 font-semibold">hit: 98.4%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-700 space-y-0.5">
+          <div class="flex items-center justify-between pb-1 mb-1 border-b border-slate-100 text-[9px]">
+            <span class="text-slate-500 font-semibold">sql/schema.sql</span>
+            <span class="text-indigo-600 font-semibold">PostgreSQL</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">CREATE TABLE</span> <span class="text-teal-700 font-bold">roadmap_progress</span> (</div>
+          <div class="pl-2">id <span class="text-indigo-600 font-semibold">UUID</span> <span class="text-slate-400">PRIMARY KEY</span>,</div>
+          <div class="pl-2">user_id <span class="text-indigo-600 font-semibold">UUID</span> <span class="text-slate-400">REFERENCES users(id)</span>,</div>
+          <div class="pl-2">unit_id <span class="text-indigo-600 font-semibold">VARCHAR(64)</span> <span class="text-amber-700">NOT NULL</span>,</div>
+          <div class="pl-2">status <span class="text-indigo-600 font-semibold">VARCHAR(16)</span> <span class="text-slate-400">DEFAULT 'pending'</span></div>
+          <div>);</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[8px] sm:text-[9px] space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-bold border-b border-slate-100 pb-1">
+            <span class="flex items-center gap-1 text-teal-700"><i data-lucide="search" class="w-3 h-3"></i> EXPLAIN ANALYZE</span>
+            <span class="text-emerald-700 bg-emerald-50 px-1 rounded">0.082ms</span>
+          </div>
+          <div class="text-slate-500 leading-tight">
+            <div>-&gt; Index Scan using ix_user_progress</div>
+            <div class="pl-2 text-indigo-600">cost=0.28..8.29 rows=1</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3 text-indigo-600"></i> SUPABASE CDC</span>
+            <span class="text-[8px] text-emerald-600">WAL streaming</span>
+          </div>
+          <div class="text-[8px] text-slate-500">publication: supabase_realtime</div>
+          <div class="text-[8px] text-slate-400">lag: 0 bytes &bull; lsn: 0/1A94F80</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="hard-drive" class="w-3 h-3 text-indigo-500"></i> PgBouncer</span>
+          <span class="text-emerald-700 font-bold text-[8px]">pool_mode: transaction</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="git-branch" class="w-3 h-3 text-indigo-500"></i> SQLAlchemy 2.0</span>
+            <span class="text-emerald-600 text-[8px]">AsyncSession</span>
+          </div>
+          <div class="text-[8px] text-slate-500">stmt = select(Progress).where(...)</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-teal-600"></i> Table Partition</span>
+          <span class="text-slate-500 text-[8px]">PARTITION BY RANGE</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Redis Lock</span>
+            <span class="text-emerald-600 text-[8px]">TTL: 10s</span>
+          </div>
+          <div class="text-[8px] text-slate-500">redis.lock("lock:user:1042")</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3 text-indigo-600"></i> Cache Hit Ratio</span>
+          <span class="text-emerald-700 font-bold text-[8px]">99.4% hit</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="archive" class="w-3 h-3 text-slate-500"></i> WAL Archive</span>
+          <span class="text-slate-400 text-[8px]">14,208 archived</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 4: Asynchronous Task Workers & Message Queues                 -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="play-circle" class="w-3.5 h-3.5 text-indigo-500"></i> WORKERS &amp; QUEUES
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-mono font-bold text-slate-900">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> CELERY 5.3</span>
+            <span class="text-emerald-600 text-[9px]">8 WORKERS</span>
+          </div>
+          <div class="text-[9px] sm:text-[10px] font-mono text-slate-500 bg-slate-50 p-1.5 rounded-lg border border-slate-100 flex items-center justify-between">
+            <span>broker: redis://:6379/1</span>
+            <span class="text-indigo-600 font-bold">prefetch: 1</span>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-700 space-y-0.5">
+          <div class="flex items-center justify-between pb-1 mb-1 border-b border-slate-100 text-[9px]">
+            <span class="text-slate-500 font-semibold">tasks/sync_worker.py</span>
+            <span class="text-amber-600 font-semibold">@celery.task</span>
+          </div>
+          <div><span class="text-indigo-600 font-bold">@celery.task</span>(bind=<span class="text-indigo-600 font-bold">True</span>, max_retries=<span class="text-amber-700">3</span>)</div>
+          <div><span class="text-indigo-600 font-bold">def</span> <span class="text-blue-700">process_sync_event</span>(self, payload):</div>
+          <div class="pl-2"><span class="text-indigo-600 font-bold">try</span>:</div>
+          <div class="pl-4">db.upsert_progress(payload)</div>
+          <div class="pl-2"><span class="text-indigo-600 font-bold">except</span> DBTransientError:</div>
+          <div class="pl-4">self.retry(countdown=<span class="text-amber-700">5</span>)</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] space-y-1">
+          <div class="flex items-center justify-between text-slate-800 font-bold">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-indigo-600"></i> CELERY BEAT</span>
+            <span class="text-[8px] text-slate-400">crontab</span>
+          </div>
+          <div class="text-[8px] text-slate-500">*/15 * * * * &rarr; flush_stale_cache</div>
+          <div class="text-[8px] text-emerald-600">last_run: 2m ago &bull; next: 13m</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="radio" class="w-3 h-3 text-rose-500"></i> Redis Pub/Sub</span>
+            <span class="text-[8px] text-rose-600 bg-rose-50 px-1 rounded">LIVE</span>
+          </div>
+          <div class="text-[8px] text-slate-500">channel: user:progress:sync</div>
+          <div class="text-[8px] text-indigo-600 font-semibold">84 active subscribers</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="monitor" class="w-3 h-3 text-indigo-500"></i> Flower Dashboard</span>
+          <span class="text-emerald-700 font-bold text-[8px]">0 failed / 48k tasks</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="trophy" class="w-3 h-3 text-amber-500"></i> Redis Sorted Set</span>
+            <span class="text-indigo-600 text-[8px]">ZADD</span>
+          </div>
+          <div class="text-[8px] text-slate-500">ZADD leaderboard 4200 "alex_dev"</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-indigo-500"></i> Arq Job Queue</span>
+          <span class="text-emerald-600 text-[8px]">asyncio_pool</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="message-square" class="w-3 h-3 text-teal-600"></i> RabbitMQ AMQP</span>
+            <span class="text-slate-400 text-[8px]">topic</span>
+          </div>
+          <div class="text-[8px] text-slate-500">exchange: roadmap.events</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="repeat" class="w-3 h-3 text-violet-600"></i> Dramatiq Actor</span>
+          <span class="text-slate-500 text-[8px]">max_retries: 3</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3 text-slate-400"></i> Redis Eviction</span>
+          <span class="text-emerald-600 text-[8px]">allkeys-lru</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 5: FastAPI Router, Dependencies & Terminal Logs               -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-500"></i> API ENDPOINTS
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] space-y-1">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+            <span class="text-emerald-700 font-bold">GET /api/v1/curriculum</span>
+            <span class="text-indigo-600 font-bold">200 OK</span>
+          </div>
+          <div class="text-[8px] sm:text-[9px] text-slate-600 space-y-0.5">
+            <div><span class="text-indigo-600 font-bold">@router.get</span>(<span class="text-amber-700">"/units/{unit_id}"</span>)</div>
+            <div><span class="text-indigo-600 font-bold">async def</span> <span class="text-blue-700">get_unit</span>(unit_id: str,</div>
+            <div class="pl-4">user = <span class="text-teal-700">Depends</span>(get_current_user),</div>
+            <div class="pl-4">cached = <span class="text-teal-700">Depends</span>(redis_cache)):</div>
+            <div class="pl-2"><span class="text-indigo-600 font-bold">return</span> cached <span class="text-indigo-600 font-bold">or</span> await db.fetch(unit_id)</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs font-mono text-[9px] sm:text-[10px] space-y-0.5">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+            <span class="text-slate-700 font-bold">core/security.py</span>
+            <span class="text-indigo-600 font-semibold">PyJWT + Bearer</span>
+          </div>
+          <div class="text-[8px] sm:text-[9px] text-slate-600 space-y-0.5">
+            <div><span class="text-indigo-600 font-bold">def</span> <span class="text-blue-700">verify_token</span>(token: str) -&gt; TokenPayload:</div>
+            <div class="pl-2">payload = jwt.decode(token, SECRET, algorithms=[<span class="text-amber-700">"HS256"</span>])</div>
+            <div class="pl-2"><span class="text-indigo-600 font-bold">return</span> TokenPayload(**payload)</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-slate-900 text-slate-200 font-mono text-[8px] sm:text-[9px] space-y-0.5">
+          <div class="flex items-center justify-between text-slate-400 border-b border-slate-800 pb-1 mb-1">
+            <span>uvicorn.stdout</span>
+            <span class="text-emerald-400">ACTIVE</span>
+          </div>
+          <div class="text-emerald-400 font-semibold">INFO: Application startup complete.</div>
+          <div class="text-slate-400">INFO: 127.0.0.1 - "GET /api/v1/sync HTTP/1.1" 200 OK 3.8ms</div>
+          <div class="text-slate-400">INFO: 127.0.0.1 - "POST /api/v1/auth/login" 200 OK 12.1ms</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="file-code" class="w-3 h-3 text-indigo-500"></i> pyproject.toml</span>
+            <span class="text-[8px] text-slate-400">Python 3.12</span>
+          </div>
+          <div class="text-[8px] text-slate-500 space-y-0.5">
+            <div>fastapi = "^0.111.0" &bull; pydantic = "^2.7.1"</div>
+            <div>asyncpg = "^0.29.0" &bull; redis = "^5.0.4"</div>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-indigo-600"></i> Argon2id Hasher</span>
+          <span class="text-emerald-600 text-[8px]">time_cost=3</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3 text-indigo-500"></i> OpenAPI 3.1</span>
+            <span class="text-emerald-600 text-[8px]">Swagger /docs</span>
+          </div>
+          <div class="text-[8px] text-slate-500">48 paths &bull; 12 Pydantic schemas</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="link" class="w-3 h-3 text-indigo-500"></i> HTTPX Pool</span>
+          <span class="text-slate-500 text-[8px]">max_keepalive: 20</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="sliders" class="w-3 h-3 text-violet-600"></i> BaseSettings</span>
+            <span class="text-indigo-600 text-[8px]">.env.production</span>
+          </div>
+          <div class="text-[8px] text-slate-500">SUPABASE_URL &bull; DB_POOL_SIZE</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> test_jwt.py</span>
+          <span class="text-emerald-700 font-bold text-[8px]">PASSED</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- COLUMN 6: CI/CD, Linters & Container Topology                         -->
+      <!-- ===================================================================== -->
+      <div class="space-y-3">
+        <div class="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
+          <i data-lucide="git-pull-request" class="w-3.5 h-3.5 text-indigo-500"></i> CI/CD &amp; DEVOPS
+        </div>
+
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-xs space-y-1.5 font-mono text-[9px]">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span class="flex items-center gap-1"><i data-lucide="github" class="w-3 h-3 text-indigo-600"></i> GITHUB ACTIONS</span>
+            <span class="text-[8px] text-emerald-700 bg-emerald-50 px-1 rounded font-bold">ALL PASS</span>
+          </div>
+          <div class="space-y-0.5 text-[8px] sm:text-[9px] text-slate-500">
+            <div class="flex justify-between"><span>ruff check --fix</span><span class="text-emerald-600 font-semibold">passed 0.14s</span></div>
+            <div class="flex justify-between"><span>mypy --strict src/</span><span class="text-emerald-600 font-semibold">passed 0.88s</span></div>
+            <div class="flex justify-between"><span>pytest -v tests/</span><span class="text-emerald-600 font-semibold">passed 1.84s</span></div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="settings" class="w-3 h-3 text-indigo-500"></i> ruff.toml</span>
+            <span class="text-[8px] text-slate-400">linter</span>
+          </div>
+          <div class="text-[8px] text-slate-500">select = ["E", "F", "I", "UP", "B", "SIM"]</div>
+          <div class="text-[8px] text-slate-400">line-length = 88</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-1">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="database" class="w-3 h-3 text-rose-500"></i> Redis Telemetry</span>
+            <span class="text-[8px] text-emerald-600">0 dropped</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1 text-[8px]">
+            <div class="p-1 rounded bg-slate-50 text-slate-600">mem: 142.8M</div>
+            <div class="p-1 rounded bg-slate-50 text-slate-600">clients: 38</div>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-indigo-600"></i> CORS Security</span>
+            <span class="text-[8px] text-emerald-600">active</span>
+          </div>
+          <div class="text-[8px] text-slate-500">allow_origins: [production_origin]</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-900 text-slate-300 text-[8px] font-mono space-y-0.5">
+          <div class="text-emerald-400 font-bold flex justify-between">
+            <span>docker ps</span>
+            <span>Up 42h</span>
+          </div>
+          <div class="text-slate-400">api-server:3.12-slim &bull; 0.0.0.0:8000</div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3 text-rose-500"></i> Sentry SDK 2.0</span>
+            <span class="text-emerald-600 text-[8px]">connected</span>
+          </div>
+          <div class="text-[8px] text-slate-500">environment: production &bull; sample: 0.2</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3 text-indigo-500"></i> OpenTelemetry</span>
+          <span class="text-slate-500 text-[8px]">span: db.execute</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono space-y-0.5">
+          <div class="flex items-center justify-between text-slate-700 font-semibold">
+            <span class="flex items-center gap-1"><i data-lucide="box" class="w-3 h-3 text-sky-600"></i> Multi-stage Docker</span>
+            <span class="text-slate-400 text-[8px]">142MB</span>
+          </div>
+          <div class="text-[8px] text-slate-500">FROM python:3.12-slim AS builder</div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[9px] font-mono text-slate-600 flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Locust Load Test</span>
+          <span class="text-emerald-700 font-bold text-[8px]">2,450 req/s &bull; 0% err</span>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white/95 border border-slate-200/90 shadow-xs text-[9px] font-mono flex items-center justify-between">
+          <span class="text-slate-700 font-semibold flex items-center gap-1"><i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i> Dependabot</span>
+          <span class="text-emerald-700 font-bold text-[8px]">0 CVEs found</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+    <!-- Top Bar Navigation -->
+    <div class="w-full max-w-md flex items-center justify-between mb-5 relative z-10">
+      <button onclick="closeAuthModal()" class="flex items-center gap-2 text-xs font-mono font-semibold text-slate-700 hover:text-indigo-600 bg-white hover:bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 transition-all shadow-xs cursor-pointer group">
+        <span>Continue without login</span>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all"></i>
+      </button>
+
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+        <div class="w-5 h-5 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" class="w-3.5 h-3.5">
+            <path d="M63.5 8C43.8 8 36.3 16.5 36.3 26.6v11.7h27.7v3.9H25.4C14.7 42.2 6 50.8 6 64.5c0 14.8 9.3 22.8 22.1 22.8h7.9V75.6c0-10.4 8.7-19.4 19.4-19.4h27.4c8.8 0 16-7.3 16-16.1V24.5C98.8 14.2 88.5 8 63.5 8zm-12.7 8.3a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4z" fill="#4F46E5"/>
+            <path d="M64.5 120c19.7 0 27.2-8.5 27.2-18.6V89.7H64v-3.9h38.6c10.7 0 19.4-8.6 19.4-22.3 0-14.8-9.3-22.8-22.1-22.8h-7.9v11.7c0 10.4-8.7 19.4-19.4 19.4H45.2c-8.8 0-16 7.3-16 16.1v15.6c0 10.3 10.3 16.5 35.3 16.5zm12.7-8.3a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z" fill="#10B981"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-mono font-bold text-slate-700">CURRICULUM TRACKER</span>
+      </div>
+    </div>
+
+    <!-- Login / Register Card -->
+    <div id="auth-modal-card" class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-xl shadow-slate-200/60 overflow-hidden transform scale-95 transition-all duration-300 relative z-10" onclick="event.stopPropagation()">
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-100 bg-gray-50/80">
+        <button id="auth-tab-signin-btn" onclick="switchAuthTab('signin')" class="flex-1 py-3 text-xs font-mono font-bold text-center border-b-2 border-indigo-600 text-indigo-600 bg-white transition-all cursor-pointer">
+          Sign In
+        </button>
+        <button id="auth-tab-signup-btn" onclick="switchAuthTab('signup')" class="flex-1 py-3 text-xs font-mono font-bold text-center border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition-all cursor-pointer">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Inline Alert Error Banner -->
+      <div id="auth-inline-error" class="hidden mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 font-mono flex items-start gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+        <span id="auth-inline-error-text"></span>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="auth-view-signin" class="p-6 space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-gray-900">Sign in to your tracker</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Enter your username and password to sync across all devices</p>
+        </div>
+
+        <form onsubmit="event.preventDefault(); submitSignIn();" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Username or Email</label>
+            <input id="signin-identifier" type="text" autocomplete="username" placeholder="e.g. alex_dev" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono" required />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+            <input id="signin-password" type="password" autocomplete="current-password" placeholder="••••••••" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono" required />
+          </div>
+          <button type="submit" id="btn-submit-signin" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="log-in" class="w-4 h-4"></i> Sign In
+          </button>
+        </form>
+      </div>
+
+      <!-- Create Account Form -->
+      <div id="auth-view-signup" class="p-6 space-y-4 hidden">
+        <div>
+          <h3 class="text-base font-bold text-gray-900">Create new account</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Set up your profile once and sync progress everywhere</p>
+        </div>
+
+        <form onsubmit="event.preventDefault(); submitSignUp();" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Full Name</label>
+            <input id="signup-name" type="text" placeholder="e.g. Alex Morgan" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600" required />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-gray-700">Username</label>
+              <span class="text-[10px] font-mono text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-semibold">
+                Permanent (One-time)
+              </span>
+            </div>
+            <input id="signup-username" type="text" autocomplete="username" placeholder="e.g. alex_dev" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono" required />
+            <p class="text-[11px] text-slate-500 mt-1 font-mono flex items-center gap-1.5">
+              <i data-lucide="shield" class="w-3 h-3 text-indigo-500 shrink-0"></i>
+              <span>Unique identifier &bull; Cannot be changed once created.</span>
+            </p>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+            <input id="signup-password" type="password" autocomplete="new-password" placeholder="At least 6 characters" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono" minlength="6" required />
+          </div>
+          <button type="submit" id="btn-submit-signup" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Create Account
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Profile Page / Modal -->
   <div id="profile-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[9998] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-200">
     <div id="profile-modal-card" class="bg-white rounded-2xl max-w-md w-full border border-gray-200 shadow-2xl overflow-hidden transform scale-95 transition-all duration-200 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
