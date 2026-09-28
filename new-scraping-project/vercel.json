@@ -1,9 +1,0 @@
-{
-  "name": "ecom-finder",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py?__vpath=$1"
-    }
-  ]
-}

@@ -1,1 +1,0 @@
-# Product Finder Application Package
